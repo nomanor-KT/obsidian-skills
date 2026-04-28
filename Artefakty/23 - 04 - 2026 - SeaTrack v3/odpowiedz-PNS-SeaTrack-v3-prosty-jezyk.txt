@@ -1,0 +1,115 @@
+SeaTrack v3 - moje odpowiedzi techniczne dla PNS (wersja prostym jezykiem)
+
+Dziekuje za przygotowanie planu wdrozenia.
+Ponizej odpowiadam na pytania techniczne i dopisuje tematy, ktore uwazam za wazne przed uruchomieniem produkcyjnym.
+Pisze wprost: aplikacje SeaTrack v3 budowalem w modelu vibecoding, razem z AI (Copilot), a nie jako klasyczny zespol developerski. Tego nie ukrywam.
+
+Skad mam te odpowiedzi:
+- z aktualnego kodu aplikacji SeaTrack v3 (frontend + backend),
+- z konfiguracji i endpointow, ktore sa juz zaimplementowane,
+- z tego, jak aplikacja dziala dzis w praktyce.
+
+1) Kod zrodlowy, instalacja, uprawnienia
+
+Potwierdzam: dostarczam gotowy kod zrodlowy aplikacji (React/Vite + Node.js).
+Instalacje na serwerze powinien wykonac dzial IT.
+Po stronie serwera potrzebuje standardowo:
+- prawa odczyt/zapis do katalogu aplikacji,
+- prawa odczyt/zapis do katalogu logow i zalacznikow,
+- dostep do portu backendu za reverse proxy.
+
+Nie potrzebuje niestandardowych uprawnien administracyjnych do codziennej pracy aplikacji.
+
+2) Czy aplikacja ma dzialac ciagle, czy recznie po deployu
+
+Aplikacja ma dzialac jako ciagly proces produkcyjny.
+Nie zakladam recznego odpalania po kazdym deployu.
+Rekomenduje menedzer procesu:
+- PM2 (najprosciej),
+- albo systemd na Linux,
+- albo odpowiednik uslugi na Windows.
+
+3) Jak wyglada aktualizacja wersji
+
+Aktualizacja to standardowy deployment nowej wersji, build frontendu i restart procesu backendu.
+npm install robi sie wtedy, gdy zmieniaja sie zaleznosci.
+Czyli: nie zawsze, ale czasem - zalezy od zakresu zmian.
+
+4) Kto odpowiada za wdrazanie nowych wersji
+
+Na start proponuje jasny podzial:
+- ja odpowiadam za zawartosc wersji, opis zmian i testy akceptacyjne,
+- IT odpowiada za wdrozenie na serwer i utrzymanie procesu.
+
+Taki podzial jest praktyczny i bezpieczny.
+
+5) Mail: SMTP relay czy Outlook desktop
+
+Preferuje SMTP relay/API zamiast Outlook desktop na serwerze.
+W aplikacji mam juz:
+- wysylke maila przez endpoint API,
+- opcje otwarcia draftu w Outlook Classic (to traktuje jako opcje pomocnicza, nie docelowa serwerowo).
+
+Do produkcji rekomenduje model relay/API bez zaleznosci od Outlook desktop.
+
+6) Active Directory, Windows czy Linux
+
+Nie mam twardej zaleznosci od Active Directory.
+Poza opcjonalnym Outlook Classic aplikacja nie wymusza Windows.
+Dopuszczam i rekomenduje wdrozenie na Linux Ubuntu z nginx jako reverse proxy.
+
+
+Dodatkowe kwestie, ktore musze poruszyc przed go-live
+
+A) "Cyfrowe teczki" (zalaczniki do zlecen)
+
+To jest realnie wazne, bo w kodzie juz to dziala.
+Aktualne limity:
+- do 20 plikow na przesylke,
+- do 25 MB na plik,
+- typy: pdf/doc/docx/xls/xlsx.
+
+Wniosek praktyczny:
+- na start chce min. 100 GB przestrzeni,
+- chce monitoring wzrostu zajetosci,
+- chce regularny backup i okresowe testy odtworzenia.
+
+B) Kolejne integracje z armatorami (API)
+
+To tez jest wazne.
+Mam juz wzorzec adapterow, wiec moge dodawac kolejnych armatorow, ale kazdy nowy armator to:
+- nowe credentials,
+- dodatkowe reguly firewall,
+- testy timeoutow i limitow zapytan.
+
+C) Lacznosc API i firewall
+
+To jest krytyczne dla poprawnego dzialania trackingu.
+Potrzebuje lacznosci outbound HTTPS (port 443) do API armatorow (co najmniej Maersk, CMA, Hapag) oraz lacznosci do systemu wysylki maili (relay/API).
+Chce tez monitoring bledow 429 i 5xx oraz jasne zasady retry/cooldown.
+
+D) Utrzymanie i bezpieczenstwo
+
+Przed startem produkcyjnym chce domknac:
+- logi i rotacje logow,
+- backup zalacznikow,
+- procedure rollback,
+- wskazanie osoby dyzurowej (on-call) po stronie utrzymania.
+
+
+Moja rekomendacja koncowa
+
+Uwazam, ze moge startowac na obecnej infrastrukturze, jezeli domkniemy punkty wyzej (szczegolnie firewall, backup i utrzymanie).
+Dedykowany serwer warto rozwazyc wtedy, gdy wzrosnie wolumen dokumentow albo liczba integracji API.
+
+
+Krotka checklista uruchomieniowa
+
+[ ] Potwierdzam docelowy model (Linux+nginx albo Windows+IIS/reverse proxy)
+[ ] Ustalamy, kto wdraza i kto utrzymuje (podzial odpowiedzialnosci)
+[ ] Uruchamiamy backend jako usluge ciagla (PM2/systemd)
+[ ] Otwieramy wymagane wyjscia firewall (API armatorow + mail relay/API)
+[ ] Testujemy polaczenia i credentials do wszystkich aktywnych API
+[ ] Przygotowujemy storage dla zalacznikow + monitoring zajetosci
+[ ] Uruchamiamy backup i wykonujemy test odtworzenia
+[ ] Ustalamy procedure rollback i kontakt on-call

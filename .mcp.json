@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "obsidian-vault": {
+      "command": "npx.cmd",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\k.torebko\\Desktop\\KarolOS\\Obsidian\\Karol-KB"],
+      "cwd": "C:\\Users\\k.torebko\\Desktop\\KarolOS\\Obsidian\\Karol-KB"
+    }
+  }
+}

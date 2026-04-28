@@ -1,0 +1,543 @@
+[
+  {
+    "id": 1,
+    "name": "ANTOLAK BEATA",
+    "role": "superuser",
+    "status": "active",
+    "offices": [
+      "*"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "3e72a8da6c4dfc4e5c9de7fa905349ce",
+    "passwordHash": "e9895e59705890d9b751a68ec832e6f24149663a56ec22e27ddd83a3cebe3ea44d751d25a7b3411b2de00c3ad909ceff43431ee914a95adedc0dcd4609420969"
+  },
+  {
+    "id": 2,
+    "name": "BABICKA EWA",
+    "role": "user",
+    "status": "spare",
+    "offices": [
+      "44227",
+      "44228"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "c637e51cc9764a6cf40a832bf408c849",
+    "passwordHash": "28e52fac533f1dad629f469a9f075c40f3e9a1a92f8426cc84f099ab9088a92f3a0d1f6546c0303711b897224613ea656f9bdf6a0cce01fc72fa8e9415e69aa2"
+  },
+  {
+    "id": 3,
+    "name": "BĄK KAROLINA",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44723",
+      "44724",
+      "44725",
+      "44726"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "aa9f0f13ee10655401184b9b22056f57",
+    "passwordHash": "c0abe8e24d02c3e1ce20bc02ca2e9e7a694dfca1ca0a3048c2639857bba4d2fbccd6803e10b461141de6d95979c6fdf990a04d7ca0f70c5a6c9bf86fec155536"
+  },
+  {
+    "id": 4,
+    "name": "BORKOWSKA MAŁGORZATA",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44230"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "ace01f0d458a2bb5953fb0bb0bbd32cb",
+    "passwordHash": "32ea129b7dddf45142efd7b3f9deee2cdd5b1cc2ec7dc014042433916523cc03760737500e8de05bd7f0384d632d998b5d98f27dfad07b45570089d73493d3e1"
+  },
+  {
+    "id": 5,
+    "name": "BREJNAK RADOSŁAW",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44227",
+      "44228"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "2ebe889adff8af42d1f31fd5e9316226",
+    "passwordHash": "2e744c0070fa74d780166f00c3462a0eb956c6ec51239b89b15e24758368731a1f287ccbd07d90e4c8c3f6138f50de35475dfc4916fcae0b442a3f7f2a1a366b"
+  },
+  {
+    "id": 6,
+    "name": "CIEĆWIERSKA ANNA",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44224"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "56b4cac175d3c016b77c2269e10891e7",
+    "passwordHash": "c6f6a7447b908336b908f4155db55c545ba547708a4bb1c2af73e178954605ca37e0decd2104d5abac7c43a7626901d842da78440c6fad64b815a3ebebea5005"
+  },
+  {
+    "id": 7,
+    "name": "CIURA BEATA",
+    "role": "superuser",
+    "status": "active",
+    "offices": [
+      "*"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "b7ac11af7b9b69be6b14bb3e3fc5cbbd",
+    "passwordHash": "576c9d8400f98c24e74c4119ea5608afbb8aecdd01e0fbfdb88653b0c8b78f83a4e688e999deb41e2970ed4e11e2e5192f00fc93068f5b9f0bb11239195333cf"
+  },
+  {
+    "id": 8,
+    "name": "DĄBROWIECKI TOMASZ",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44523",
+      "44524",
+      "44525",
+      "44526",
+      "44527",
+      "44528"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "c48d7cd1238835709aa52eac388f88cc",
+    "passwordHash": "f6b0a935d64471e1ca0740fcb3a1b35d8d48a8e10303b33858a1a87630bbe98422c5b4fbf58ef0a5a849fe79a22cfff56027f41fb99d96e6024d4766035894fa"
+  },
+  {
+    "id": 9,
+    "name": "DRĄŻEWSKI JERZY",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44230"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "c8b8aa992794e4be37b0a39305ae63f2",
+    "passwordHash": "0d11dd7d246260fe7b120018165d628038991a5fe4725f071a06d92fa1b6ed50d4d77976a85923cb31814d87b5d311e99bb842eb6a2bc40d88f2d417cb8a09f4"
+  },
+  {
+    "id": 10,
+    "name": "DUBIŃSKI ŁUKASZ",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44723",
+      "44724",
+      "44725",
+      "44726"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "24ad5051365e2ee61bdfdf7bd2421664",
+    "passwordHash": "01f9c99dd8b2f17770a75ed9c4bcc773a979b032f5e39e00929433a127e6ae66d9724a98750e737e0646707c479a5008db82b7bd10c644c33ae33c3b6eef8a7f"
+  },
+  {
+    "id": 11,
+    "name": "DZIURBIEL WITOLD",
+    "role": "user",
+    "status": "spare",
+    "offices": [
+      "44723",
+      "44724",
+      "44725",
+      "44726"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "a49727bfc101d7d842c7d960184f62e9",
+    "passwordHash": "e9f97a82b3fd25e2028bd492c1028d8fd9e0519e2ec4ac26085dce30c5db6b44462108a995735279c100e0975dfe34dfe1ef7f2204a9dce04ac553e831687764"
+  },
+  {
+    "id": 12,
+    "name": "DYRA MAŁGORZATA",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44225",
+      "44226"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "3a84f20e805460d48cbbffee5ef1f711",
+    "passwordHash": "5cadd802173e1150639ea3180b0ab17c5ede0b7e32c8594b0c2fecfaa9cc4c6405d6e22cf1b837da454c72a23317490714d96dbf82b36e66c562ed8be3c7dcfe"
+  },
+  {
+    "id": 13,
+    "name": "FILIPOWICZ MARCIN",
+    "role": "user",
+    "status": "spare",
+    "offices": [
+      "44927",
+      "44928"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "6ad117f6156ffcd58a9740e78c706761",
+    "passwordHash": "0a9ba89a012b33a66ff85d19f80f3554aefb933df90d26896e5782bd0b774db8924b542f6b9c019979e9326af686105dcaf7bec69c448ff7ef024554e962ae2f"
+  },
+  {
+    "id": 14,
+    "name": "GACKOWSKI MARCIN",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44723",
+      "44724",
+      "44725",
+      "44726"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "377091524427a170a345683a64a11172",
+    "passwordHash": "9375cfe9713bb3a09db663979010ffc2f3ceca5f00fdc59764b3ed2c343f22a1171d4f1a15b2c35cce4579428c95286411ecf2fadec261c35abc58c4f3face32"
+  },
+  {
+    "id": 15,
+    "name": "GŁÓWKA IWONA",
+    "role": "superuser",
+    "status": "active",
+    "offices": [
+      "*"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "c5dc61bedb4e058619510a70e4429cb9",
+    "passwordHash": "8ea01046c3a913e401e2bc152c569cb11801e0c6030b4d3dc4ee8d47bad5e66f603b6dfeb181d79ef8b5793734d70524b2ace183269087f2cfdd91d83088d669"
+  },
+  {
+    "id": 16,
+    "name": "GŁÓWKA NATALIA",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44227",
+      "44228"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "3a620bdb32736981640d136b478a2927",
+    "passwordHash": "a6e177d08fe870093f15c3b4286168b64c0647b496d54899b2fa75d5e28f1c01be7138a5372c4ea1894d1d95e6f0a652cd1aba2a8312db8fe0b01fcb3c9341d9"
+  },
+  {
+    "id": 17,
+    "name": "GOŁĄBEK JAKUB",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44530",
+      "44523",
+      "44524",
+      "44525",
+      "44526",
+      "44527",
+      "44528"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "a6973f3e5f0b2a9a6cda15b4b95c42df",
+    "passwordHash": "b751f7291e26d10de855b33ed0fd8bd8f9d35e0e5fa23e6165dbfdbb0a57baa0c9b2111595068aa3100d5a62d6d023dfd7f018ca6318e7e3c1cb7943603db555"
+  },
+  {
+    "id": 18,
+    "name": "GROMEK MAŁGORZATA",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44530",
+      "44523",
+      "44524",
+      "44525",
+      "44526",
+      "44527",
+      "44528"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "65541c1c0a87d05da8926e5155ca409c",
+    "passwordHash": "a2eef5d4c5fbae386d0bbe51c5e9e5e3b136841d45c904d3b645d6b8cd96b7629bc2b54a86cd988fb5b37fa69375248824f4a259fcc59d53cf681cb84acbdca8"
+  },
+  {
+    "id": 19,
+    "name": "GRZYBOWSKA OLIWIA",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44225",
+      "44226"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "c387ad0be16c559d8cd1ea293468b2ec",
+    "passwordHash": "661e469feed2458b87cd7af776d78b3b6f63ceab2dca210ac2773a977b28732bdc84609d859131be4dec7a6713b8e4c2a5372694572cacaeb00973f85752699f"
+  },
+  {
+    "id": 20,
+    "name": "IWANIUK PAWEŁ",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44224"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "0b54fd89a2cc42426982e4988373df63",
+    "passwordHash": "33f5cc72e52f72e78493bfdf09a5fac535a45db369ade6a99d3fa0e4c4fb834a6e10f78570303c81a765334db83d7912f1b1daa97f88484d466f91ffd35778ec"
+  },
+  {
+    "id": 21,
+    "name": "JARZYNA JOLANTA",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44230"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "6f07163cab18f4035460fa9e202eb613",
+    "passwordHash": "c92db6595c31d5468e03eb71b9986ffd9bb714148b69a9a90f7aef6e679b2552c44c1a8ca6127188e5e9f7e0e09886b5a3cdfd9d16e369d02a0df3aa17cc8b0f"
+  },
+  {
+    "id": 22,
+    "name": "JELENIEWSKA MAGDALENA",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44224"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "816fe61ab49acb77def735940b3dc226",
+    "passwordHash": "f925dcb0b2bc67424098268f74c74e4666d717d725306b3dd45fe26daa35c6056ddab72fa08f5048103a4652023dcee62200e0d25db2ee6ac825594bf7d59093"
+  },
+  {
+    "id": 23,
+    "name": "KALINOWSKI JAN",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44227",
+      "44228"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "4a2d37f4fb7fa41e3617bb8937d5c388",
+    "passwordHash": "e53095e4ef0dfe0d340276b63198b7f5c70092f10f84b224d0f1dd87d30bc6aea1855e6512b0e77dedfb5f3213b947511d7d867b6f6ba2a90abf89a7f9cc3c5e"
+  },
+  {
+    "id": 24,
+    "name": "KLEPARSKI JAKUB",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44723",
+      "44724",
+      "44725",
+      "44726"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "b01fac433725ebf8c9ae4603d7a55bb5",
+    "passwordHash": "1b06d0136828d673c0f1f7b7f5f8974b0efff24327de5c18c778cd1ccbf7edb32fded68ea77733acdc774964270173d401b94f7860b46b8bf746745522c0f841"
+  },
+  {
+    "id": 25,
+    "name": "KLESZCZEWSKI ŁUKASZ",
+    "role": "superuser",
+    "status": "active",
+    "offices": [
+      "*"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "4c7c6de904ecc29dbf5c7fb17ad0a3f7",
+    "passwordHash": "63aeffac13ebfebefad2bea84420abd9d6f0d478c9bd89e17e91ba2fda4679ec727a4d1ad78614a18514a9161e44c319874de676376962906d96264d279918d4"
+  },
+  {
+    "id": 26,
+    "name": "KRZYCH IWONA",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44530"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "cd0b611f19dcfb417e3df84a907ef41a",
+    "passwordHash": "7a949e16f015926b8338794c235687e7c4cfc572fb30a0b883869fe550d5c27dec6f5449496e9248eba23aa8e2dc5077a26cb6fb1dec276b5ca1c2e43c591170"
+  },
+  {
+    "id": 27,
+    "name": "MICHALSKI DANIEL",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44923",
+      "44924",
+      "44925",
+      "44926"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "9d0e393ca100f49c0409f0d01c185c7c",
+    "passwordHash": "5c3d6f53689ce49fd7520fe813070f5c7c2f23a74aaff11b978cd68f6e9a1ebc84d13fb8bf989f6c619fd0a2394e84222bc7b7d6d0e4f60f952e66d74943a378"
+  },
+  {
+    "id": 28,
+    "name": "MIGA MAREK",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44230"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "bc4f9746f2c850a0aee0077ed197868f",
+    "passwordHash": "2893e459750f628d21b2c035d273c8130eda61e45b9a114dd70a9470031f3a47ec058e7958b494f365681bc51e972e22490f99cc94bfaf6e4d6af2c331b77780"
+  },
+  {
+    "id": 29,
+    "name": "MIGUT MAGDALENA",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44530",
+      "44523",
+      "44524",
+      "44525",
+      "44526",
+      "44527",
+      "44528"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "4248f95ef6572bfd3766f2ef3dcc412e",
+    "passwordHash": "641978f312a6d0b5b111b190cb04802fe9b398ab269c088125453295d37ceb4579c6d204dd1b41b3166bec3c585237db2a41c1111c43be54f992a68afd2271b4"
+  },
+  {
+    "id": 30,
+    "name": "MROCZEK KINGA",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44923",
+      "44924",
+      "44925",
+      "44926"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "4436f401d658845f97f1e800833510c9",
+    "passwordHash": "ebaf89ad445f18e25eac35ef2e9e2fb2c9055b5addc34ee0019572bcd91763c12f6d1d812e9039f58e6198a9f17b1aff6698bf911849ee6e126a933115021305"
+  },
+  {
+    "id": 31,
+    "name": "PIKOR MARCIN",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44723",
+      "44724",
+      "44725",
+      "44726"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "46a5c0cc3bf5beff74de1dec5e8b81f4",
+    "passwordHash": "6dc81344759fb531d329ad77e889f9c175566d26b421ebc67a500e083a30c189eb2812834ecaf3afe4c521ad98c3963741e68904a52b07e6d1e37389f5911fdf"
+  },
+  {
+    "id": 32,
+    "name": "PRZYSOWA-CHODAŃ ELŻBIETA",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44223"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "98b8c9b87a95e60b02bb81be76c95b37",
+    "passwordHash": "fc2fa484a43c923ca185245bbc72cd3433768fe78c016b6ba107131435b559a39ca74d9d15bd5a63320badca8ce8123ec96a08f7b65cc3798a5b90fa76325796"
+  },
+  {
+    "id": 33,
+    "name": "SIELSKA-MĘDRZYCKA JOLANTA",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44230"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "7b8958567f0a309bd597fa7e41e33804",
+    "passwordHash": "6ef0db4e205242f14b79eb92a38fe2f3d528eacde0cb6f16619b97fe98ed4ac4c7346ba51b5f2827f107cb09564c23eb97e2fc06c06fbd87ccb09c5293b4985c"
+  },
+  {
+    "id": 34,
+    "name": "SOBIERAJ KAMIL",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44225",
+      "44226"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "e2aad2d0adbb0e71a248547182ad650d",
+    "passwordHash": "d9aff82e64fd6e1faf67520f6622dd4ed0d36123586b7eab2351dc4ba0d9788722744457ba1a25851227e20ed1b9c277645e1c2f0a8bf597a8d9c6c28a6ab029"
+  },
+  {
+    "id": 35,
+    "name": "SOWA JUSTYNA",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44923",
+      "44924",
+      "44925",
+      "44926"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "b83f6a83e9c31e3774515c1f860eb3a5",
+    "passwordHash": "a57b1d67948b46d9ed1da8d97c97774c82cd97c19eeece47e4214d9f6dcbf6c1c3ab40cc2a2d061bda39fce1df5c51eb5e410ce3c1e9d2bb24506fb336e4f796"
+  },
+  {
+    "id": 36,
+    "name": "TOREBKO KAROL",
+    "role": "superuser",
+    "status": "active",
+    "offices": [
+      "*"
+    ],
+    "mustChangePassword": false,
+    "passwordSalt": "6075468f599eb98948afbb24d2dc451a",
+    "passwordHash": "9bb5b71b2ecd99a88e3610ef9aff76ad2209c6fc128c019fb4201044086a943b7dc1aefb39ae5ae1a67d1285f5b0baa302e2bec4726439b5afce4c65fc2201f6"
+  },
+  {
+    "id": 37,
+    "name": "TWARÓG PIOTR",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44923",
+      "44924",
+      "44925",
+      "44926"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "c5c96a1ede63274937049c735866baf8",
+    "passwordHash": "27e54bded11aafbffc5601d0232c49cd02323be128384e02b234efd9f8c5368ac26cc734b805c043a8d2f96b1d97eca0c3cd8e133f6bbb38eb22dc6beed79928"
+  },
+  {
+    "id": 38,
+    "name": "WIEREMIEJCZYK ALEKSANDRA",
+    "role": "user",
+    "status": "active",
+    "offices": [
+      "44224"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "1ed27d8e92e8c8fa36d988065867714d",
+    "passwordHash": "b71c37c431b362ac2c76e206a9b6e286d246417aa4e43d22373c6a8e01e15a08eebbbe2e85b507c47934bd7a974e757b5f2f14882b9ffd48e710f3c19451162c"
+  },
+  {
+    "id": 39,
+    "name": "WOŹNA KATARZYNA",
+    "role": "user",
+    "status": "spare",
+    "offices": [
+      "44223"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "0293f99f27ce03b67cdd39197b0c204b",
+    "passwordHash": "7341a48861a8a9e89503dcedb2279142b81acb38abc18a6f63621cf293f0d8967058226d9474e1a3ae992418bfec8a4a778ba6e766a1b65534d21266720025ed"
+  },
+  {
+    "id": 40,
+    "name": "ZIEMNIEWICZ MAREK",
+    "role": "management",
+    "status": "active",
+    "offices": [
+      "*"
+    ],
+    "mustChangePassword": true,
+    "passwordSalt": "68756503e4555ccc2e01dbd490895727",
+    "passwordHash": "61118f87a66608c468333af468f1cff5db08b8db74bc43b67fa39bba747231c7d95550c73a60a0ae8bb0efa430db13ff8f2c8c93b309d9607b59ff7ee626ff5d"
+  }
+]

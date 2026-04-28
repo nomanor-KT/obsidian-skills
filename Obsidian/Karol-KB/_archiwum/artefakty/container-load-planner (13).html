@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Container Load Planner — M&amp;M Militzer &amp; Münch</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* === CUBE: COMPOSITION === */
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body,#root{height:100%;width:100%;overflow:hidden}
+    body{font-family:'JetBrains Mono',monospace;background:#0d1117;color:#e6edf3}
+    .bento{display:grid;height:calc(100vh - 48px);gap:0;grid-template-columns:340px 1fr;grid-template-rows:1fr auto;grid-template-areas:"sidebar viewport" "sidebar analytics"}
+    .bento-sidebar{grid-area:sidebar;overflow:hidden;display:flex;flex-direction:column;border-right:1px solid #30363d}
+    .bento-viewport{grid-area:viewport;position:relative;overflow:hidden;min-height:180px}
+    .bento-analytics{grid-area:analytics;border-top:1px solid #30363d;overflow-y:auto;max-height:45vh;min-height:60px}
+    @media(max-width:1024px){.bento{grid-template-columns:1fr;grid-template-rows:45vh 1fr auto;grid-template-areas:"sidebar" "viewport" "analytics"}.bento-sidebar{border-right:none;border-bottom:1px solid #30363d}.grid-4,.grid-5{grid-template-columns:repeat(2,1fr)}}
+    /* === CUBE: UTILITY === */
+    .flex{display:flex}.flex-col{flex-direction:column}.flex-1{flex:1 1 0%}.flex-wrap{flex-wrap:wrap}
+    .items-center{align-items:center}.justify-between{justify-content:space-between}.justify-center{justify-content:center}
+    .gap-1{gap:4px}.gap-2{gap:8px}.gap-3{gap:12px}.gap-4{gap:16px}
+    .grid{display:grid}.grid-2{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:repeat(3,1fr)}.grid-4{grid-template-columns:repeat(4,1fr)}.grid-5{grid-template-columns:repeat(5,1fr)}
+    .p-2{padding:8px}.p-3{padding:12px}.p-4{padding:16px}
+    .px-3{padding-left:12px;padding-right:12px}.px-4{padding-left:16px;padding-right:16px}
+    .py-1{padding-top:4px;padding-bottom:4px}.py-2{padding-top:8px;padding-bottom:8px}
+    .mt-1{margin-top:4px}.mt-2{margin-top:8px}.mt-3{margin-top:12px}.mb-1{margin-bottom:4px}.mb-2{margin-bottom:8px}
+    .w-full{width:100%}.h-full{height:100%}.rounded{border-radius:6px}.rounded-lg{border-radius:8px}
+    .text-xs{font-size:11px;line-height:1.5}.text-sm{font-size:13px;line-height:1.5}.text-lg{font-size:18px}
+    .font-medium{font-weight:500}.font-bold{font-weight:700}
+    .truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}
+    .relative{position:relative}.absolute{position:absolute}
+    .cursor-pointer{cursor:pointer}.pointer-events-none{pointer-events:none}
+    .text-center{text-align:center}.tracking-tight{letter-spacing:-0.025em}
+    .transition{transition:all .2s ease}.shadow-lg{box-shadow:0 10px 25px rgba(0,0,0,.3)}
+    .space-y-1>*+*{margin-top:4px}.space-y-2>*+*{margin-top:8px}.space-y-3>*+*{margin-top:12px}.space-y-4>*+*{margin-top:16px}
+    /* === CUBE: BLOCK === */
+    ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#161b22}::-webkit-scrollbar-thumb{background:#30363d;border-radius:3px}
+    .fade-in{animation:fadeIn .3s ease}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+    input[type="number"]::-webkit-inner-spin-button{opacity:.3}
+    select{cursor:pointer}
+    .bg-dark{background:#0d1117}.bg-card{background:#161b22}.bg-card-inner{background:#0d1117}
+    .border-dark{border-color:#30363d}
+    .text-main{color:#e6edf3}.text-muted{color:#7d8590}.text-accent{color:#58a6ff}
+    .text-green{color:#3fb950}.text-yellow{color:#d29922}.text-red{color:#f85149}.text-orange{color:#d18616}
+    .app-header{background:#161b22;border-bottom:1px solid #30363d;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:48px;flex-shrink:0}
+    .input-field{background:#0d1117;border:1px solid #30363d;color:#e6edf3;padding:6px 8px;border-radius:6px;font-size:13px;font-family:inherit;width:100%;outline:none;transition:border-color .2s}
+    .input-field:focus{border-color:#58a6ff}.input-field::placeholder{color:#484f58}
+    .btn{padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;border:none;transition:all .15s;font-weight:500}
+    .btn:disabled{opacity:.5;cursor:not-allowed}.btn:focus-visible{outline:2px solid #58a6ff;outline-offset:2px}
+    .btn-primary{background:#238636;color:#fff}.btn-primary:hover:not(:disabled){background:#2ea043}
+    .btn-action{background:#1f6feb;color:#fff}.btn-action:hover:not(:disabled){background:#388bfd}
+    .btn-secondary{background:#21262d;color:#c9d1d9;border:1px solid #30363d}.btn-secondary:hover:not(:disabled){background:#30363d}
+    .btn-danger{background:#da3633;color:#fff}.btn-danger:hover:not(:disabled){background:#f85149}
+    .btn-auto{background:linear-gradient(135deg,#1f6feb,#238636);color:#fff;font-weight:600}.btn-auto:hover:not(:disabled){filter:brightness(1.15)}
+    .tab{flex:1;padding:10px 0;text-align:center;font-size:11px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;color:#7d8590}
+    .tab:hover{color:#c9d1d9}.tab[aria-selected="true"]{color:#58a6ff;border-bottom-color:#58a6ff}.tab:focus-visible{outline:2px solid #58a6ff;outline-offset:-2px}
+    .tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:500}
+    .tag-green{background:rgba(63,185,80,.15);color:#3fb950}.tag-red{background:rgba(248,81,73,.15);color:#f85149}.tag-yellow{background:rgba(210,153,34,.15);color:#d29922}
+    .alert-warn{background:rgba(187,128,9,.15);border:1px solid rgba(187,128,9,.3);color:#d29922;padding:8px;border-radius:6px;font-size:11px}
+    .alert-danger{background:rgba(248,81,73,.15);border:1px solid rgba(248,81,73,.3);color:#f85149;padding:8px;border-radius:6px;font-size:11px}
+    .alert-info{background:rgba(56,139,253,.1);border:1px solid rgba(56,139,253,.25);color:#58a6ff;padding:8px;border-radius:6px;font-size:11px}
+    .bar-track{height:6px;border-radius:3px;background:#21262d;overflow:hidden}
+    .bar-fill{height:100%;border-radius:3px;transition:width .5s ease}
+    .bar-green{background:#238636}.bar-yellow{background:#d29922}.bar-red{background:#da3633}.bar-blue{background:#1f6feb}
+    .gauge-card{background:#161b22;border:1px solid #21262d;border-radius:10px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:4px;transition:border-color .2s}
+    .gauge-card:hover{border-color:#30363d}
+    .gauge-ring{transform:rotate(-90deg)}.gauge-bg{fill:none;stroke:#21262d;stroke-width:4}.gauge-fg{fill:none;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .8s ease}
+    .cargo-card{background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:8px;font-size:11px;transition:border-color .2s}
+    .cargo-card:focus-within{border-color:#58a6ff}.cargo-card[data-editing="true"]{border-color:#388bfd}
+    .mc{background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:12px;margin-top:8px;cursor:pointer;transition:border-color .2s}
+    .mc:hover{border-color:#30363d}.mc[aria-selected="true"]{border-color:#388bfd;box-shadow:0 0 0 1px #388bfd}
+    details summary{cursor:pointer;user-select:none}details summary:hover{color:#c9d1d9}
+    /* === CUBE: EXCEPTION === */
+    [data-busy="true"] .btn-action,[data-busy="true"] .btn-auto{pointer-events:none;opacity:.6}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const {useState,useEffect,useRef,useMemo,useCallback} = React;
+
+    const LOGO_WHITE = "data:image/jpeg;base64,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";
+    const LOGO_BLUE = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAeAB4AAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCADJAgkDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD9U6KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD471f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";
+
+    const CONTAINERS = [
+      {id:"20dc",name:"20' DC (Dry Container)",d:5898,w:2352,h:2393,payload:25000,volume:33.2,type:"dry"},
+      {id:"40dc",name:"40' DC",d:12032,w:2352,h:2393,payload:26500,volume:67.7,type:"dry"},
+      {id:"40hc",name:"40' HC (High Cube)",d:12032,w:2352,h:2698,payload:26230,volume:76.3,type:"dry"},
+      {id:"45hc",name:"45' HC",d:13556,w:2352,h:2698,payload:25600,volume:86.0,type:"dry"},
+      {id:"20rf",name:"20' Reefer",d:5444,w:2294,h:2165,payload:21500,volume:27.0,type:"reefer"},
+      {id:"40rf",name:"40' Reefer HC",d:11561,w:2294,h:2500,payload:26280,volume:66.4,type:"reefer"},
+      {id:"20ot",name:"20' Open Top",d:5898,w:2352,h:2346,payload:21800,volume:32.6,type:"opentop"},
+      {id:"40ot",name:"40' Open Top",d:12032,w:2352,h:2346,payload:26330,volume:66.5,type:"opentop"},
+      {id:"20fr",name:"20' Flat Rack",d:5620,w:2240,h:2233,payload:21600,volume:null,type:"flatrack"},
+      {id:"40fr",name:"40' Flat Rack",d:11784,w:2240,h:1955,payload:26000,volume:null,type:"flatrack"},
+    ];
+
+    const CARGO_TYPES = [
+      {id:"paleta",name:"Paleta",stackable:true,rotH:true,dD:1200,dW:800,dH:144},
+      {id:"skrzynia",name:"Skrzynia",stackable:true,rotH:true},
+      {id:"beczka",name:"Beczka",stackable:false,rotH:false,cylinder:true},
+      {id:"karton",name:"Karton",stackable:true,rotH:true,dMaxStack:200},
+      {id:"inne",name:"Inne",stackable:false,rotH:false},
+    ];
+
+    const ROTATION_OPTS = [
+      {id:"none",label:"Brak rotacji"},
+      {id:"h90",label:"90° w poziomie (D↔W)"},
+      {id:"side",label:"Na bok (W↔H)"},
+      {id:"front",label:"Na czoło (D↔H)"},
+      {id:"full",label:"Pełna swoboda (6 orientacji)"},
+    ];
+
+    const COLORS = ["#388bfd","#da3633","#3fb950","#d29922","#a371f7","#db61a2","#39d2c0","#f0883e","#2ea043","#6e7681"];
+    const uid = () => Math.random().toString(36).substr(2,9);
+    const clamp = (v,lo,hi) => Math.min(Math.max(v,lo),hi);
+    const fmt = n => Number(n).toLocaleString("pl-PL");
+    const fmtDim = (d,w,h) => `${fmt(d)} × ${fmt(w)} × ${fmt(h)}`;
+
+    // Orientation generator
+    function getOrientations(cargo) {
+      const {d,w,h,rotations,thisUp} = cargo;
+      const set = new Set();
+      const add = (a,b,c) => set.add(`${a},${b},${c}`);
+      add(d,w,h);
+      if (thisUp) {
+        if (rotations.includes("h90")||rotations.includes("full")) add(w,d,h);
+      } else {
+        if (rotations.includes("full")) { add(d,h,w);add(w,d,h);add(w,h,d);add(h,d,w);add(h,w,d); }
+        else { if(rotations.includes("h90"))add(w,d,h); if(rotations.includes("side"))add(d,h,w); if(rotations.includes("front"))add(h,w,d); }
+      }
+      return [...set].map(s=>s.split(",").map(Number));
+    }
+
+    // 3D Bin Packing - CG-aware EP heuristic (cap, timeout, soft bounds)
+    const MAX_EPS=150, PACK_TIMEOUT=6000, SOFT_MAX=15000;
+    function packItems(container,cargoList,opts={}) {
+      const maxW=opts.maxWeight||container.payload;
+      const cD=container.d,cW=container.w,cH=container.h;
+      const isFR=container.type==="flatrack",isOT=container.type==="opentop";
+      const limD=cD, limW=isFR?SOFT_MAX:cW, limH=(isFR||isOT)?SOFT_MAX:cH;
+      const t0=Date.now();
+      const totalQty=cargoList.reduce((s,c)=>s+c.qty,0);
+      const fastMode=totalQty>500;
+      let items=[];
+      cargoList.forEach(c=>{for(let i=0;i<c.qty;i++)items.push({...c,iid:uid(),oid:c.id})});
+      items.sort((a,b)=>{const pa=a.priority||999,pb=b.priority||999;if(pa!==pb)return pb-pa;return(b.d*b.w*b.h)-(a.d*a.w*a.h)});
+      let eps=[{x:0,y:0,z:0}],placed=[],notPlaced=[],curWeight=0;
+
+      // Running CG tracking for CG-aware placement
+      let sumWx=0, sumWy=0, sumWt=0;
+      const midD=cD/2, midW=cW/2;
+
+      // Simple geometric score for EP pruning/sorting
+      const epSort=e=>e.z*10+e.x*2+e.y;
+
+      // CG-aware placement score: predicts what CG would be after placing item here
+      const placeSc=(ex,ey,ez,od,ow,iw)=>{
+        // Base: pack from bottom up, back to front
+        let score = ez*10 + ex*2;
+        // Predict new CG center if we place item here
+        const cx=(ex+od/2), cy=(ey+ow/2);
+        if(sumWt+iw>0){
+          const newCGx=(sumWx+cx*iw)/(sumWt+iw);
+          const newCGy=(sumWy+cy*iw)/(sumWt+iw);
+          // Deviation from container center (normalized 0..1)
+          const axDev=Math.abs(newCGx-midD)/midD;
+          const latDev=Math.abs(newCGy-midW)/midW;
+          // Lateral balance is critical (tipping), axial less so
+          score += latDev*8 + axDev*3;
+        } else {
+          // First item: prefer center-Y, back-X
+          score += (Math.abs(cy-midW)/midW)*6;
+        }
+        return score;
+      };
+
+      const collides=(bx,by,bz,bd,bw,bh)=>{for(let i=placed.length-1;i>=0;i--){const e=placed[i];if(bx<e.x+e.pd&&bx+bd>e.x&&by<e.y+e.pw&&by+bw>e.y&&bz<e.z+e.ph&&bz+bh>e.z)return true}return false};
+      const support=(bx,by,bz,bd,bw)=>{if(bz===0)return true;const area=bd*bw;let sup=0;for(let i=placed.length-1;i>=0;i--){const e=placed[i];if(Math.abs((e.z+e.ph)-bz)<1){const ox=Math.max(0,Math.min(bx+bd,e.x+e.pd)-Math.max(bx,e.x));const oy=Math.max(0,Math.min(by+bw,e.y+e.pw)-Math.max(by,e.y));sup+=ox*oy;if(sup>=area*0.7)return true}}return false};
+      const canStack=(bx,by,bz,bd,bw,bwt)=>{if(bz===0)return true;for(const e of placed){if(Math.abs((e.z+e.ph)-bz)<1){const ox=Math.max(0,Math.min(bx+bd,e.x+e.pd)-Math.max(bx,e.x));const oy=Math.max(0,Math.min(by+bw,e.y+e.pw)-Math.max(by,e.y));if(ox>0&&oy>0){if(e.fragile||!e.stackable)return false;if(e.maxStackWeight>0&&bwt>e.maxStackWeight)return false}}}return true};
+
+      for(const item of items){
+        if(Date.now()-t0>PACK_TIMEOUT){notPlaced.push(item);continue}
+        if(curWeight+item.weight>maxW){notPlaced.push(item);continue}
+        const orients=getOrientations(item);let bestX=-1,bestY=-1,bestZ=-1,bestD=0,bestW=0,bestH=0,bestSc=1e15,found=false;
+        for(let ei=0;ei<eps.length;ei++){const ep=eps[ei];for(let oi=0;oi<orients.length;oi++){const od=orients[oi][0],ow=orients[oi][1],oh=orients[oi][2];if(ep.x+od>limD||ep.y+ow>limW||ep.z+oh>limH)continue;if(collides(ep.x,ep.y,ep.z,od,ow,oh))continue;if(!support(ep.x,ep.y,ep.z,od,ow))continue;if(!canStack(ep.x,ep.y,ep.z,od,ow,item.weight))continue;const sc=placeSc(ep.x,ep.y,ep.z,od,ow,item.weight);if(sc<bestSc){bestSc=sc;bestX=ep.x;bestY=ep.y;bestZ=ep.z;bestD=od;bestW=ow;bestH=oh;found=true}if(fastMode&&found)break}if(fastMode&&found)break}
+        if(found){const p={x:bestX,y:bestY,z:bestZ,pd:bestD,pw:bestW,ph:bestH,...item};placed.push(p);curWeight+=item.weight;sumWx+=(bestX+bestD/2)*item.weight;sumWy+=(bestY+bestW/2)*item.weight;sumWt+=item.weight;const nps=[{x:bestX+bestD,y:bestY,z:bestZ},{x:bestX,y:bestY+bestW,z:bestZ},{x:bestX,y:bestY,z:bestZ+bestH}];for(const np of nps){if(np.x<=limD&&np.y<=limW&&np.z<=limH&&!eps.some(e=>Math.abs(e.x-np.x)<1&&Math.abs(e.y-np.y)<1&&Math.abs(e.z-np.z)<1))eps.push(np)}eps=eps.filter(e=>!(Math.abs(e.x-bestX)<1&&Math.abs(e.y-bestY)<1&&Math.abs(e.z-bestZ)<1));eps.sort((a,b)=>epSort(a)-epSort(b));if(eps.length>MAX_EPS)eps.length=MAX_EPS}
+        else{notPlaced.push(item)}
+      }
+      return {placed,notPlaced,totalWeight:curWeight};
+    }
+
+    function calcCG(placed,cont) {
+      if(!placed.length)return null;
+      let tw=0,wx=0,wy=0,wz=0;
+      for(const p of placed){wx+=(p.x+p.pd/2)*p.weight;wy+=(p.y+p.pw/2)*p.weight;wz+=(p.z+p.ph/2)*p.weight;tw+=p.weight}
+      if(!tw)return null;
+      const cgx=wx/tw,cgy=wy/tw,cgz=wz/tw;
+      const axPct=(cgx/cont.d)*100;const latDev=Math.abs((cgy/cont.w)*100-50);
+      const axOk=axPct>=40&&axPct<=60;const latOk=latDev<=5;
+      return{x:cgx,y:cgy,z:cgz,axPct,latDev,axOk,latOk,status:axOk&&latOk?"ok":(!axOk&&!latOk?"danger":"warning"),tw};
+    }
+
+    // Calculate overhang for OT/FR containers
+    function calcOverhang(placed,cont) {
+      if(!placed.length)return null;
+      let maxX=0,maxY=0,maxZ=0;
+      for(const p of placed){
+        maxX=Math.max(maxX,p.x+p.pd);
+        maxY=Math.max(maxY,p.y+p.pw);
+        maxZ=Math.max(maxZ,p.z+p.ph);
+      }
+      const overD=Math.max(0,maxX-cont.d);
+      const overW=Math.max(0,maxY-cont.w);
+      const overH=Math.max(0,maxZ-cont.h);
+      const isFR=cont.type==="flatrack",isOT=cont.type==="opentop";
+      if(!isFR&&!isOT)return null;
+      if(overD===0&&overW===0&&overH===0)return null;
+      return{overD:Math.round(overD/10),overW:Math.round(overW/10),overH:Math.round(overH/10),maxX,maxY,maxZ,isFR,isOT};
+    }
+
+    // AUTO-SUGGEST: greedy mixed-container optimization
+    function autoSuggest(cargoList) {
+      let maxD=0,maxW=0,maxH=0;
+      cargoList.forEach(c=>{
+        const orients=getOrientations(c);
+        orients.forEach(o=>{maxD=Math.max(maxD,o[0]);maxW=Math.max(maxW,o[1]);maxH=Math.max(maxH,o[2])});
+      });
+      const eligible=CONTAINERS.filter(c=>c.type==="dry"&&c.volume&&c.d>=maxD&&c.w>=maxW&&c.h>=maxH);
+      if(eligible.length===0)return{error:"Żaden standardowy kontener nie mieści największego ładunku. Sprawdź wymiary."};
+
+      // Helper: regroup notPlaced items by original ID
+      function regroup(notPlaced){
+        const m={};
+        notPlaced.forEach(p=>{if(!m[p.oid])m[p.oid]={...p,qty:0};m[p.oid].qty++});
+        return Object.values(m);
+      }
+      // Helper: total qty from cargo list
+      function totalQty(list){return list.reduce((s,c)=>s+c.qty,0)}
+      // Helper: build container record
+      function buildRec(cont,res){
+        const cg=calcCG(res.placed,cont);
+        const oh=calcOverhang(res.placed,cont);
+        const usedVol=res.placed.reduce((s,p)=>s+p.pd*p.pw*p.ph,0)/1e9;
+        return{container:cont,placed:res.placed,notPlaced:res.notPlaced,totalWeight:res.totalWeight,usedVol,volPct:cont.volume?(usedVol/cont.volume*100):0,wtPct:(res.totalWeight/cont.payload*100),cg,overhang:oh};
+      }
+      // Helper: make label from containers array  
+      function makeLabel(containers){
+        const counts={};
+        containers.forEach(c=>{const n=c.container.name;counts[n]=(counts[n]||0)+1});
+        return Object.entries(counts).map(([n,q])=>q+"× "+n).join(" + ");
+      }
+      // Helper: run one strategy and return result object
+      function buildResult(containers,remaining){
+        const allPlaced=totalQty(remaining)===0;
+        const totalContainers=containers.length;
+        const totalPayload=containers.reduce((s,c)=>s+c.container.payload,0);
+        const totalVolume=containers.reduce((s,c)=>s+(c.container.volume||0),0);
+        const label=makeLabel(containers);
+        return{label,containers,totalContainers,allPlaced,remaining,totalPayload,totalVolume};
+      }
+
+      const results=[];
+      const sortedByVol=[...eligible].sort((a,b)=>b.volume-a.volume);
+
+      // STRATEGY 1: Greedy mixed — at each step pick the best container for remaining cargo
+      {
+        let remaining=cargoList.map(c=>({...c}));
+        const containers=[];
+        let safety=0;
+        while(totalQty(remaining)>0 && safety<20){
+          safety++;
+          let bestRes=null,bestCont=null,bestPlaced=0,bestFitsAll=false,bestVol=Infinity;
+          for(const cont of sortedByVol){
+            const res=packItems(cont,remaining);
+            if(res.placed.length===0)continue;
+            const fitsAll=res.notPlaced.length===0;
+            // Prefer: fits all in smallest container > most items placed
+            if(fitsAll && !bestFitsAll){
+              bestFitsAll=true;bestRes=res;bestCont=cont;bestPlaced=res.placed.length;bestVol=cont.volume;
+            } else if(fitsAll && bestFitsAll && cont.volume<bestVol){
+              bestRes=res;bestCont=cont;bestVol=cont.volume;
+            } else if(!fitsAll && !bestFitsAll && res.placed.length>bestPlaced){
+              bestRes=res;bestCont=cont;bestPlaced=res.placed.length;
+            }
+          }
+          if(!bestRes)break;
+          containers.push(buildRec(bestCont,bestRes));
+          remaining=regroup(bestRes.notPlaced);
+        }
+        if(containers.length>0) results.push(buildResult(containers,remaining));
+      }
+
+      // STRATEGY 2: Same-type strategies (fill with one container type only)
+      for(const cont of sortedByVol){
+        let remaining=cargoList.map(c=>({...c}));
+        const containers=[];
+        let safety=0;
+        while(totalQty(remaining)>0 && safety<20){
+          safety++;
+          const res=packItems(cont,remaining);
+          if(res.placed.length===0)break;
+          containers.push(buildRec(cont,res));
+          remaining=regroup(res.notPlaced);
+        }
+        if(containers.length>0) results.push(buildResult(containers,remaining));
+      }
+
+      // Deduplicate: remove results with identical label
+      const seen=new Set();
+      const unique=results.filter(r=>{if(seen.has(r.label))return false;seen.add(r.label);return true});
+
+      // Sort: all placed first → fewest containers → best avg volume utilization
+      unique.sort((a,b)=>{
+        if(a.allPlaced!==b.allPlaced)return a.allPlaced?-1:1;
+        if(a.totalContainers!==b.totalContainers)return a.totalContainers-b.totalContainers;
+        const aV=a.containers.reduce((s,c)=>s+c.volPct,0)/a.totalContainers;
+        const bV=b.containers.reduce((s,c)=>s+c.volPct,0)/b.totalContainers;
+        return bV-aV;
+      });
+      return{results:unique};
+    }
+
+
+    // THREE.JS 3D VIEWER
+    function Viewer3D({container,placed,cg,hoveredId,onHover}) {
+      const ref=useRef(null);const scn=useRef(null);const cam=useRef(null);const ren=useRef(null);const af=useRef(null);const meshes=useRef({});
+      const mouse=useRef({down:false,btn:0,x:0,y:0,phi:Math.PI/4,theta:Math.PI/4,dist:2.8,tx:0,ty:0,tz:0});
+      const rc=useRef(new THREE.Raycaster());const mv=useRef(new THREE.Vector2());
+
+      useEffect(()=>{
+        const el=ref.current;if(!el)return;const W=el.clientWidth,H=el.clientHeight;
+        const scene=new THREE.Scene();scene.background=new THREE.Color(0x0d1117);scn.current=scene;
+        const camera=new THREE.PerspectiveCamera(50,W/H,0.01,100);cam.current=camera;
+        const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(W,H);renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+        el.appendChild(renderer.domElement);ren.current=renderer;
+        // Expose refs on DOM for PDF export
+        el._three={scene,camera,renderer};
+        scene.add(new THREE.AmbientLight(0xffffff,0.5));
+        const d1=new THREE.DirectionalLight(0xffffff,0.7);d1.position.set(5,10,7);scene.add(d1);
+        const d2=new THREE.DirectionalLight(0xffffff,0.25);d2.position.set(-3,5,-5);scene.add(d2);
+        const grid=new THREE.GridHelper(5,20,0x21262d,0x161b22);grid.position.y=-0.005;scene.add(grid);
+        const animate=()=>{af.current=requestAnimationFrame(animate);const m=mouse.current;camera.position.set(m.tx+m.dist*Math.sin(m.phi)*Math.cos(m.theta),m.ty+m.dist*Math.cos(m.phi),m.tz+m.dist*Math.sin(m.phi)*Math.sin(m.theta));camera.lookAt(m.tx,m.ty,m.tz);renderer.render(scene,camera)};
+        animate();
+        const onR=()=>{const w=el.clientWidth,h=el.clientHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)};
+        window.addEventListener("resize",onR);
+        const onMD=e=>{mouse.current.down=true;mouse.current.btn=e.button;mouse.current.x=e.clientX;mouse.current.y=e.clientY};
+        const onMU=()=>{mouse.current.down=false};
+        const onMM=e=>{const m=mouse.current;if(!m.down){const rect=el.getBoundingClientRect();mv.current.x=((e.clientX-rect.left)/rect.width)*2-1;mv.current.y=-((e.clientY-rect.top)/rect.height)*2+1;rc.current.setFromCamera(mv.current,camera);const hits=rc.current.intersectObjects(Object.values(meshes.current).filter(Boolean));onHover&&onHover(hits.length>0&&hits[0].object.userData.cid?hits[0].object.userData.cid:null);return}const dx=e.clientX-m.x,dy=e.clientY-m.y;m.x=e.clientX;m.y=e.clientY;if(m.btn===0){m.theta-=dx*0.005;m.phi=clamp(m.phi-dy*0.005,0.1,Math.PI-0.1)}else if(m.btn===2){m.tx-=dx*0.002*m.dist;m.ty+=dy*0.002*m.dist}};
+        const onWh=e=>{e.preventDefault();mouse.current.dist=clamp(mouse.current.dist*(1+e.deltaY*0.001),0.3,20)};
+        const onCtx=e=>e.preventDefault();
+        const cvs=renderer.domElement;
+        cvs.addEventListener("mousedown",onMD);cvs.addEventListener("mouseup",onMU);cvs.addEventListener("mousemove",onMM);cvs.addEventListener("wheel",onWh,{passive:false});cvs.addEventListener("contextmenu",onCtx);
+        return()=>{cancelAnimationFrame(af.current);window.removeEventListener("resize",onR);cvs.removeEventListener("mousedown",onMD);cvs.removeEventListener("mouseup",onMU);cvs.removeEventListener("mousemove",onMM);cvs.removeEventListener("wheel",onWh);cvs.removeEventListener("contextmenu",onCtx);renderer.dispose();if(el.contains(cvs))el.removeChild(cvs)};
+      },[]);
+
+      useEffect(()=>{
+        const scene=scn.current;if(!scene||!container)return;
+        scene.children.filter(c=>c.userData&&c.userData.dyn).forEach(c=>{scene.remove(c);if(c.geometry)c.geometry.dispose();if(c.material){if(Array.isArray(c.material))c.material.forEach(m=>m.dispose());else c.material.dispose()}});
+        meshes.current={};
+        // Scale: account for cargo that extends beyond container (OT/FR)
+        let maxExtD=container.d,maxExtW=container.w,maxExtH=container.h;
+        if(placed&&placed.length){placed.forEach(p=>{maxExtD=Math.max(maxExtD,p.x+p.pd);maxExtW=Math.max(maxExtW,p.y+p.pw);maxExtH=Math.max(maxExtH,p.z+p.ph)})}
+        const S=2/Math.max(maxExtD,maxExtW,maxExtH);
+        const isFR=container.type==="flatrack",isOT=container.type==="opentop";
+        const wireColor=isFR?0xf0883e:isOT?0xd29922:0x388bfd;
+        const cg1=new THREE.BoxGeometry(container.d*S,container.h*S,container.w*S);
+        const ce=new THREE.EdgesGeometry(cg1);const cl=new THREE.LineSegments(ce,new THREE.LineBasicMaterial({color:wireColor}));cl.position.set(container.d*S/2,container.h*S/2,container.w*S/2);cl.userData.dyn=true;scene.add(cl);
+        const cm=new THREE.Mesh(cg1.clone(),new THREE.MeshPhongMaterial({color:wireColor,transparent:true,opacity:isFR?0.01:0.03,side:THREE.DoubleSide}));cm.position.copy(cl.position);cm.userData.dyn=true;scene.add(cm);
+        const fg=new THREE.PlaneGeometry(container.d*S,container.w*S);const fm=new THREE.Mesh(fg,new THREE.MeshPhongMaterial({color:0x161b22,side:THREE.DoubleSide}));fm.rotation.x=-Math.PI/2;fm.position.set(container.d*S/2,0.001,container.w*S/2);fm.userData.dyn=true;scene.add(fm);
+        if(!isFR){const dg=new THREE.PlaneGeometry(container.w*S*0.92,container.h*S*0.92);const dm=new THREE.Mesh(dg,new THREE.MeshPhongMaterial({color:0xf0883e,transparent:true,opacity:0.12,side:THREE.DoubleSide}));dm.rotation.y=Math.PI/2;dm.position.set(container.d*S+0.002,container.h*S/2,container.w*S/2);dm.userData.dyn=true;scene.add(dm)};
+        if(placed&&placed.length){placed.forEach((p,i)=>{const col=new THREE.Color(p.color||COLORS[i%COLORS.length]);const hov=p.iid===hoveredId;const geo=new THREE.BoxGeometry(p.pd*S,p.ph*S,p.pw*S);const mat=new THREE.MeshPhongMaterial({color:col,transparent:true,opacity:hov?0.92:0.72,emissive:hov?col:new THREE.Color(0),emissiveIntensity:hov?0.35:0});const mesh=new THREE.Mesh(geo,mat);mesh.position.set((p.x+p.pd/2)*S,(p.z+p.ph/2)*S,(p.y+p.pw/2)*S);mesh.userData={dyn:true,cid:p.iid};scene.add(mesh);meshes.current[p.iid]=mesh;const eg=new THREE.EdgesGeometry(geo);const ln=new THREE.LineSegments(eg,new THREE.LineBasicMaterial({color:hov?0xffffff:0x000000}));ln.position.copy(mesh.position);ln.userData.dyn=true;scene.add(ln)})}
+        if(cg){const cc=cg.status==="ok"?0x3fb950:cg.status==="warning"?0xd29922:0xf85149;const sg=new THREE.SphereGeometry(0.035,16,16);const sm=new THREE.Mesh(sg,new THREE.MeshPhongMaterial({color:cc,emissive:cc,emissiveIntensity:0.6}));sm.position.set(cg.x*S,cg.z*S,cg.y*S);sm.userData.dyn=true;scene.add(sm)}
+        mouse.current.tx=maxExtD*S/2;mouse.current.ty=maxExtH*S/2;mouse.current.tz=maxExtW*S/2;
+      },[container,placed,cg,hoveredId]);
+
+      return <div ref={ref} style={{width:"100%",height:"100%"}} />;
+    }
+
+    // ============================================================
+    // JSDoc TYPE DEFINITIONS
+    // ============================================================
+    /** @typedef {{id:string,name:string,d:number,w:number,h:number,payload:number,volume:number|null,type:string}} ContainerProfile */
+    /** @typedef {{id:string,name:string,type:string,d:number,w:number,h:number,weight:number,qty:number,stackable:boolean,maxStackWeight:number,rotations:string[],fragile:boolean,thisUp:boolean,priority:number|string,color:string}} CargoItem */
+    /** @typedef {{placed:Object[],notPlaced:Object[],totalWeight:number}} PackingResult */
+    /** @typedef {{x:number,y:number,z:number,axPct:number,latDev:number,axOk:boolean,latOk:boolean,status:string,tw:number}} CGResult */
+    /** @typedef {{overD:number,overW:number,overH:number,maxX:number,maxY:number,maxZ:number,isFR:boolean,isOT:boolean}} OverhangResult */
+
+    // ============================================================
+    // BENTO GAUGE COMPONENTS
+    // ============================================================
+    function Gauge({value,max,label,unit,color,size=70}) {
+      const pct=max>0?Math.min(100,(value/max)*100):0;
+      const r=(size-8)/2;const C=2*Math.PI*r;const offset=C-(pct/100)*C;
+      const sc=pct>90?"#da3633":pct>70?"#d29922":color||"#3fb950";
+      return (
+        <div className="gauge-card" role="meter" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100} aria-label={label+": "+Math.round(pct)+"%"}>
+          <svg width={size} height={size} className="gauge-ring"><circle className="gauge-bg" cx={size/2} cy={size/2} r={r}/><circle className="gauge-fg" cx={size/2} cy={size/2} r={r} stroke={sc} strokeDasharray={C} strokeDashoffset={offset}/></svg>
+          <div className="text-center" style={{marginTop:-4}}>
+            <div style={{fontSize:14,fontWeight:700,color:sc}}>{pct.toFixed(1)}%</div>
+            <div className="text-muted" style={{fontSize:9}}>{label}</div>
+            <div className="text-muted" style={{fontSize:9}}>{typeof value==="number"?fmt(Math.round(value)):value} / {fmt(max)} {unit}</div>
+          </div>
+        </div>
+      );
+    }
+    function CGCard({cg}) {
+      const s=cg?cg.status:null;const icon=s==="ok"?"✅":s==="warning"?"⚠️":"🚨";
+      const label=s==="ok"?"OK":s==="warning"?"Ostrzeżenie":"Niebezpieczny";
+      const color=s==="ok"?"#3fb950":s==="warning"?"#d29922":"#f85149";
+      return (
+        <div className="gauge-card" role="status" aria-label={"CG: "+(cg?label:"brak")}>
+          <div style={{fontSize:28,lineHeight:1}}>{cg?icon:"—"}</div>
+          <div style={{fontSize:12,fontWeight:700,color:cg?color:"#7d8590"}}>{cg?label:"Brak danych"}</div>
+          <div className="text-muted" style={{fontSize:9}}>Środek ciężkości</div>
+          {cg&&<div className="text-muted" style={{fontSize:9}}>Oś: {cg.axPct.toFixed(1)}% · Lat: ±{cg.latDev.toFixed(1)}%</div>}
+        </div>
+      );
+    }
+    function OOGCard({overhang}) {
+      if(!overhang) return (<div className="gauge-card" role="status" aria-label="Brak OOG"><div style={{fontSize:28,lineHeight:1}}>📦</div><div style={{fontSize:12,fontWeight:600,color:"#3fb950"}}>W normie</div><div className="text-muted" style={{fontSize:9}}>OOG Status</div></div>);
+      return (
+        <div className="gauge-card" style={{borderColor:"rgba(210,153,34,.4)"}} role="alert" aria-label="OOG">
+          <div style={{fontSize:28,lineHeight:1}}>📐</div>
+          <div style={{fontSize:12,fontWeight:700,color:"#d29922"}}>OOG</div>
+          <div className="text-muted" style={{fontSize:9}}>{overhang.isFR?"Flat Rack":"Open Top"}</div>
+          <div style={{fontSize:10,color:"#d29922",textAlign:"center",lineHeight:1.6}}>{overhang.overH>0&&<span>↑ +{overhang.overH}cm </span>}{overhang.overW>0&&<span>↔ +{overhang.overW}cm</span>}</div>
+        </div>
+      );
+    }
+    function LoadedCard({count}) {
+      return (
+        <div className="gauge-card" role="status" aria-label={"Załadowano "+count+" szt."}>
+          <div style={{fontSize:28,lineHeight:1,color:count>0?"#3fb950":"#7d8590"}}>{count>0?"✅":"—"}</div>
+          <div style={{fontSize:18,fontWeight:700,color:count>0?"#3fb950":"#7d8590"}}>{count}</div>
+          <div className="text-muted" style={{fontSize:9}}>Załadowano szt.</div>
+        </div>
+      );
+    }
+
+    // ============================================================
+    // MAIN APP
+    // ============================================================
+    function App() {
+      const [selCont,setSelCont] = useState("40hc");
+      const [opWt,setOpWt] = useState("");
+      const [cargo,setCargo] = useState([]);
+      const [result,setResult] = useState(null); // single container result
+      const [autoResult,setAutoResult] = useState(null); // auto-suggest multi results
+      const [activeAutoIdx,setActiveAutoIdx] = useState(0); // which auto result to show
+      const [activeContIdx,setActiveContIdx] = useState(0); // which container in the auto result to visualize
+      const [hov,setHov] = useState(null);
+      const [tab,setTab] = useState("container");
+      const [busy,setBusy] = useState(false);
+      const [showAdd,setShowAdd] = useState(false);
+      const [editId,setEditId] = useState(null);
+      const [refNum,setRefNum] = useState("");
+      const [mode,setMode] = useState("manual"); // "manual" or "auto"
+      const viewportRef = useRef(null);
+
+      const cont = useMemo(()=>CONTAINERS.find(c=>c.id===selCont),[selCont]);
+      const effWt = useMemo(()=>{const o=parseFloat(opWt);return(o>0&&o<cont.payload)?o:cont.payload},[opWt,cont]);
+      const totWt = useMemo(()=>cargo.reduce((s,c)=>s+c.weight*c.qty,0),[cargo]);
+      const totVol = useMemo(()=>cargo.reduce((s,c)=>s+(c.d*c.w*c.h*c.qty)/1e9,0),[cargo]);
+      const totPcs = useMemo(()=>cargo.reduce((s,c)=>s+c.qty,0),[cargo]);
+
+      const emptyC = {id:"",name:"",type:"paleta",d:1200,w:800,h:1000,weight:500,qty:1,stackable:true,maxStackWeight:1000,maxLayers:3,rotations:["h90"],fragile:false,thisUp:false,priority:"",color:COLORS[0]};
+      const [nc,setNc] = useState({...emptyC});
+
+      const addCargo = () => {
+        if(!nc.name||nc.d<=0||nc.w<=0||nc.h<=0||nc.weight<=0||nc.qty<1)return;
+        setCargo(p=>[...p,{...nc,id:uid()}]);
+        setNc({...emptyC,color:COLORS[(cargo.length+1)%COLORS.length]});
+        setShowAdd(false);
+      };
+      const saveCargo = () => {
+        if(!nc.name||nc.d<=0||nc.w<=0||nc.h<=0||nc.weight<=0||nc.qty<1)return;
+        setCargo(p=>p.map(c=>c.id===editId?{...nc,id:editId}:c));
+        setNc({...emptyC,color:COLORS[(cargo.length)%COLORS.length]});
+        setEditId(null);setShowAdd(false);
+      };
+      const startEdit = id => {
+        const it=cargo.find(c=>c.id===id);
+        if(it){setNc({...it});setEditId(id);setShowAdd(true)}
+      };
+      const cancelForm = () => {setShowAdd(false);setEditId(null);setNc({...emptyC,color:COLORS[cargo.length%COLORS.length]})};
+      const delCargo = id => {setCargo(p=>p.filter(c=>c.id!==id));if(editId===id)cancelForm()};
+      const dupCargo = id => {const it=cargo.find(c=>c.id===id);if(it)setCargo(p=>[...p,{...it,id:uid(),name:it.name+" (kopia)"}])};
+
+      const typeChange = t => {
+        const ct=CARGO_TYPES.find(x=>x.id===t);
+        setNc(p=>({...p,type:t,stackable:ct.stackable,rotations:ct.rotH?["h90"]:["none"],thisUp:t==="beczka",d:ct.dD||p.d,w:ct.dW||p.w,h:ct.dH||p.h,maxStackWeight:ct.dMaxStack||1000}));
+      };
+
+      // Manual optimize for selected container
+      const optimize = () => {
+        setBusy(true);setMode("manual");setAutoResult(null);
+        setTimeout(()=>{
+          const r=packItems(cont,cargo,{maxWeight:effWt});
+          const g=calcCG(r.placed,cont);
+          const oh=calcOverhang(r.placed,cont);
+          setResult({...r,cg:g,overhang:oh});setBusy(false);
+        },50);
+      };
+
+      // Auto-suggest optimal containers
+      const autoOptimize = () => {
+        setBusy(true);setMode("auto");setResult(null);setActiveAutoIdx(0);setActiveContIdx(0);
+        setTimeout(()=>{
+          const r=autoSuggest(cargo);
+          setAutoResult(r);setBusy(false);
+        },100);
+      };
+
+      const exportJSON = () => {
+        const d={container:selCont,cargo,opWt,refNum};
+        const b=new Blob([JSON.stringify(d,null,2)],{type:"application/json"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=`plan-${refNum||"export"}.json`;a.click();URL.revokeObjectURL(u);
+      };
+      const importJSON = e => {
+        const f=e.target.files[0];if(!f)return;const r=new FileReader();
+        r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.container)setSelCont(d.container);if(d.cargo)setCargo(d.cargo);if(d.opWt)setOpWt(d.opWt);if(d.refNum)setRefNum(d.refNum)}catch{alert("Błąd odczytu JSON")}};
+        r.readAsText(f);
+      };
+      const exportCSV = () => {
+        const h="Nazwa,Typ,Długość(mm),Szerokość(mm),Wysokość(mm),Waga(kg),Ilość,Piętrowalny,Rotacje\n";
+        const rows=cargo.map(c=>`"${c.name}","${c.type}",${c.d},${c.w},${c.h},${c.weight},${c.qty},${c.stackable?"TAK":"NIE"},"${c.rotations.join(";")}"`).join("\n");
+        const b=new Blob([h+rows],{type:"text/csv"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="ladunki.csv";a.click();URL.revokeObjectURL(u);
+      };
+      const addTemplate = t => {
+        setCargo(p=>[...p,{...emptyC,...t,id:uid(),stackable:t.type!=="beczka",rotations:t.type==="beczka"?["none"]:["h90"],thisUp:t.type==="beczka",color:COLORS[p.length%COLORS.length]}]);
+      };
+
+      const exportPDF = () => {
+        const {jsPDF} = window.jspdf;
+        const doc = new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+        const W=297,H=210,M=12;
+        let y=M;
+        const black=()=>doc.setTextColor(30,30,30);
+        const dark=()=>doc.setTextColor(50,50,50);
+        const gray=()=>doc.setTextColor(110,110,110);
+        const blue=()=>doc.setTextColor(24,90,180);
+        const green=()=>doc.setTextColor(20,130,50);
+        const red=()=>doc.setTextColor(200,40,40);
+        const orange=()=>doc.setTextColor(180,100,10);
+        const now=new Date().toLocaleDateString("pl-PL")+" "+new Date().toLocaleTimeString("pl-PL",{hour:"2-digit",minute:"2-digit"});
+
+        // Build list of containers to report
+        let containersList = [];
+        let variantLabel = "";
+        let isMulti = false;
+        if(mode==="auto"&&autoResult&&autoResult.results&&autoResult.results[activeAutoIdx]){
+          const ar=autoResult.results[activeAutoIdx];
+          containersList=ar.containers;
+          variantLabel=ar.label+(ar.allPlaced?" — calosc zaladowana":"");
+          isMulti=containersList.length>1;
+        } else if(mode==="manual"&&result){
+          containersList=[{container:cont,placed:result.placed,notPlaced:result.notPlaced,totalWeight:result.totalWeight,usedVol:result.placed.reduce((s,p)=>s+p.pd*p.pw*p.ph,0)/1e9,volPct:cont.volume?(result.placed.reduce((s,p)=>s+p.pd*p.pw*p.ph,0)/1e9/cont.volume*100):0,wtPct:(result.totalWeight/cont.payload*100),cg:result.cg,overhang:result.overhang}];
+          variantLabel=cont.name;
+        }
+        if(containersList.length===0)return;
+
+        // Helper: draw header band
+        const drawHeader=(subtitle)=>{
+          doc.setFillColor(24,55,110);doc.rect(0,0,W,16,"F");
+          try{doc.addImage(LOGO_WHITE,"JPEG",M,2,26,11)}catch(e){}
+          doc.setFont("helvetica","bold");doc.setFontSize(12);doc.setTextColor(255,255,255);
+          doc.text("Container Load Planner",M+30,8);
+          doc.setFontSize(7);doc.setTextColor(200,210,230);
+          doc.text(subtitle,M+30,13);
+          doc.setFontSize(8);doc.setTextColor(220,230,245);
+          if(refNum)doc.text("Ref: "+refNum,W-M,7,{align:"right"});
+          doc.text(now,W-M,12,{align:"right"});
+        };
+
+        // Helper: draw stat boxes for a container
+        const drawStats=(cc)=>{
+          const rW=cc.totalWeight?(cc.totalWeight/cc.container.payload*100):0;
+          const rV=cc.usedVol&&cc.container.volume?(cc.usedVol/cc.container.volume*100):0;
+          const bW=(W-2*M-9)/4;
+          const drawBox=(x,label,value,pct,color)=>{
+            doc.setFillColor(250,250,252);doc.setDrawColor(200,200,200);
+            doc.roundedRect(x,y,bW,16,1.5,1.5,"FD");
+            doc.setFontSize(6.5);gray();doc.text(label,x+3,y+5);
+            doc.setFontSize(9);doc.setFont("helvetica","bold");
+            if(color==="green")green();else if(color==="red")red();else if(color==="orange")orange();else black();
+            doc.text(value,x+3,y+11);
+            doc.setFont("helvetica","normal");
+            if(pct!==null){
+              doc.setFillColor(230,230,230);doc.rect(x+3,y+13,bW-6,1.5,"F");
+              const barC=pct>90?[200,40,40]:pct>70?[200,150,30]:[30,140,60];
+              doc.setFillColor(barC[0],barC[1],barC[2]);doc.rect(x+3,y+13,Math.min(100,pct)/100*(bW-6),1.5,"F");
+            }
+          };
+          drawBox(M,"Waga",fmt(Math.round(cc.totalWeight||0))+" / "+fmt(cc.container.payload)+" kg  ("+rW.toFixed(1)+"%)",rW,rW>90?"red":rW>70?"orange":"green");
+          drawBox(M+bW+3,"Objetosc",(cc.usedVol||0).toFixed(1)+" / "+(cc.container.volume||"—")+" m\u00B3  ("+rV.toFixed(1)+"%)",rV,"black");
+          const cgL=cc.cg?(cc.cg.status==="ok"?"OK":cc.cg.status==="warning"?"Ostrzezenie":"Niebezpieczny"):"—";
+          const cgC=cc.cg?(cc.cg.status==="ok"?"green":cc.cg.status==="warning"?"orange":"red"):"black";
+          drawBox(M+2*(bW+3),"Srodek ciezkosci",cgL,null,cgC);
+          if(cc.cg){doc.setFontSize(6);gray();doc.text("Os: "+cc.cg.axPct.toFixed(1)+"%  |  Lat: ±"+cc.cg.latDev.toFixed(1)+"%",M+2*(bW+3)+3,y+14.5)}
+          drawBox(M+3*(bW+3),"Zaladowano",cc.placed.length+" szt.",null,"green");
+          if(cc.overhang){
+            let oh="";
+            if(cc.overhang.overH>0)oh+="gora +"+cc.overhang.overH+"cm  ";
+            if(cc.overhang.overW>0)oh+="boki +"+cc.overhang.overW+"cm";
+            if(oh){doc.setFontSize(5.5);orange();doc.text("Wystawanie: "+oh,M+3*(bW+3)+3,y+14.5)}
+          }
+          y+=20;
+        };
+
+        // Helper: draw loading instructions table
+        const drawLoadingTable=(placed)=>{
+          if(!placed||!placed.length)return;
+          if(y>H-40){doc.addPage();y=M}
+          doc.setFillColor(24,55,110);doc.roundedRect(M,y,W-2*M,8,1.5,1.5,"F");
+          doc.setFontSize(8);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
+          doc.text("Instrukcja zaladunku ("+placed.length+" krokow)",M+4,y+5.5);
+          doc.setFont("helvetica","normal");y+=11;
+          const ic=[M+2,M+14,M+72,M+120,M+148,M+195,M+235];
+          const ih=["#","Nazwa","Orientacja (mm)","Waga (kg)","Pozycja X,Y,Z (mm)","Obrocony","Kolor"];
+          doc.setFillColor(230,235,240);doc.rect(M,y,W-2*M,6,"F");
+          doc.setFontSize(6.5);doc.setFont("helvetica","bold");dark();
+          ih.forEach((h,i)=>doc.text(h,ic[i],y+4));
+          doc.setFont("helvetica","normal");y+=7;
+          doc.setFontSize(6);
+          placed.forEach((p,i)=>{
+            if(y>H-18){doc.addPage();y=M}
+            if(i%2===0){doc.setFillColor(248,249,251);doc.rect(M,y-1,W-2*M,5.5,"F")}
+            blue();doc.text(""+(i+1),ic[0],y+3);
+            black();doc.text((p.name||"").substring(0,22),ic[1],y+3);
+            dark();doc.text(p.pd+" x "+p.pw+" x "+p.ph,ic[2],y+3);
+            doc.text(""+p.weight,ic[3],y+3);
+            doc.text(Math.round(p.x)+",  "+Math.round(p.y)+",  "+Math.round(p.z),ic[4],y+3);
+            (p.pd!==p.d||p.pw!==p.w)?orange():gray();
+            doc.text(p.pd!==p.d||p.pw!==p.w?"TAK":"—",ic[5],y+3);
+            const hex=p.color||"#388bfd";const cr=parseInt(hex.slice(1,3),16),cg2=parseInt(hex.slice(3,5),16),cb=parseInt(hex.slice(5,7),16);
+            doc.setFillColor(cr,cg2,cb);doc.rect(ic[6],y-0.2,4,3.5,"F");
+            y+=5.5;
+          });
+        };
+
+        // ========== PAGE 1: Overview + cargo list ==========
+        drawHeader("M&M Militzer & Münch — Raport zaladunku");
+        y=22;
+
+        // Overview box
+        doc.setDrawColor(180,180,180);doc.setFillColor(245,247,250);
+        const ovH=isMulti?28:16;
+        doc.roundedRect(M,y,W-2*M,ovH,2,2,"FD");
+        doc.setFontSize(10);doc.setFont("helvetica","bold");black();
+        if(isMulti){
+          doc.text("Wariant: "+variantLabel,M+4,y+6);
+          doc.setFont("helvetica","normal");doc.setFontSize(7.5);dark();
+          doc.text("Liczba kontenerow: "+containersList.length+"    |    Lacznie ladunkow: "+totPcs+" szt.    |    Laczna waga: "+fmt(totWt)+" kg    |    Laczna objetosc: "+totVol.toFixed(1)+" m\u00B3",M+4,y+13);
+          // List containers
+          doc.setFontSize(7);blue();
+          let cListStr=containersList.map((cc,i)=>"#"+(i+1)+": "+cc.container.name).join("    |    ");
+          doc.text(cListStr,M+4,y+20);
+          doc.setFont("helvetica","normal");
+        } else {
+          doc.text("Kontener: "+containersList[0].container.name,M+4,y+6);
+          doc.setFont("helvetica","normal");doc.setFontSize(7.5);dark();
+          const c0=containersList[0].container;
+          doc.text("Wymiary wewn.: "+fmt(c0.d)+" x "+fmt(c0.w)+" x "+fmt(c0.h)+" mm    |    Ladownosc: "+fmt(c0.payload)+" kg    |    Kubatura: "+(c0.volume||"—")+" m\u00B3",M+4,y+12);
+        }
+        y+=ovH+4;
+
+        // Cargo table
+        doc.setFillColor(24,55,110);doc.roundedRect(M,y,W-2*M,8,1.5,1.5,"F");
+        doc.setFontSize(8);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
+        doc.text("Lista ladunkow ("+cargo.length+" typow, "+totPcs+" szt.)",M+4,y+5.5);
+        doc.setFont("helvetica","normal");y+=11;
+        const cols=[M+2,M+72,M+115,M+145,M+168,M+198,M+228];
+        const colH2=["Nazwa","Wymiary (mm)","Waga (kg)","Ilosc","Typ","Pietrow.","Rotacje"];
+        doc.setFillColor(230,235,240);doc.rect(M,y,W-2*M,6,"F");
+        doc.setFontSize(6.5);doc.setFont("helvetica","bold");dark();
+        colH2.forEach((h,i)=>doc.text(h,cols[i],y+4));
+        doc.setFont("helvetica","normal");y+=7;
+        doc.setFontSize(6.5);
+        cargo.forEach((c,idx)=>{
+          if(y>H-18){doc.addPage();y=M}
+          if(idx%2===0){doc.setFillColor(248,249,251);doc.rect(M,y-1,W-2*M,6,"F")}
+          black();doc.text((c.name||"").substring(0,28),cols[0],y+3);
+          dark();doc.text(c.d+" x "+c.w+" x "+c.h,cols[1],y+3);
+          doc.text(""+c.weight,cols[2],y+3);
+          doc.text(""+c.qty,cols[3],y+3);
+          gray();doc.text(c.type,cols[4],y+3);
+          c.stackable?green():red();doc.text(c.stackable?"TAK":"NIE",cols[5],y+3);
+          gray();doc.text((c.rotations||[]).join(", "),cols[6],y+3);
+          y+=6;
+        });
+
+        // ========== CONTAINER PAGES ==========
+        const vpEl=viewportRef.current;
+        const threeRef=vpEl&&vpEl.children[0]&&vpEl.children[0]._three;
+
+        // Helper: rebuild 3D scene for given container data, render on white bg, return imgData
+        const captureContainer=(contData,placedData,cgData)=>{
+          if(!threeRef)return null;
+          const {scene,camera,renderer}=threeRef;
+          const cvs=renderer.domElement;
+          try{
+            // Clear dynamic objects
+            const dyn=scene.children.filter(c2=>c2.userData&&c2.userData.dyn);
+            dyn.forEach(c2=>{scene.remove(c2);if(c2.geometry)c2.geometry.dispose();if(c2.material){if(Array.isArray(c2.material))c2.material.forEach(m2=>m2.dispose());else c2.material.dispose()}});
+            // White bg, hide grid
+            const origBg=scene.background?scene.background.clone():new THREE.Color(0x0d1117);
+            scene.background=new THREE.Color(0xffffff);
+            const grd=scene.children.find(c2=>c2.isGridHelper);
+            if(grd)grd.visible=false;
+            // Scale
+            let mxD=contData.d,mxW=contData.w,mxH=contData.h;
+            if(placedData&&placedData.length)placedData.forEach(p=>{mxD=Math.max(mxD,p.x+p.pd);mxW=Math.max(mxW,p.y+p.pw);mxH=Math.max(mxH,p.z+p.ph)});
+            const S=2/Math.max(mxD,mxW,mxH);
+            const isFR2=contData.type==="flatrack",isOT2=contData.type==="opentop";
+            const wc=isFR2?0xf0883e:isOT2?0xd29922:0x388bfd;
+            // Container wireframe
+            const bg=new THREE.BoxGeometry(contData.d*S,contData.h*S,contData.w*S);
+            const bl=new THREE.LineSegments(new THREE.EdgesGeometry(bg),new THREE.LineBasicMaterial({color:wc}));bl.position.set(contData.d*S/2,contData.h*S/2,contData.w*S/2);bl.userData.dyn=true;scene.add(bl);
+            const bm=new THREE.Mesh(bg.clone(),new THREE.MeshPhongMaterial({color:wc,transparent:true,opacity:0.03,side:THREE.DoubleSide}));bm.position.copy(bl.position);bm.userData.dyn=true;scene.add(bm);
+            // Floor
+            const fm=new THREE.Mesh(new THREE.PlaneGeometry(contData.d*S,contData.w*S),new THREE.MeshPhongMaterial({color:0xdddddd,side:THREE.DoubleSide}));fm.rotation.x=-Math.PI/2;fm.position.set(contData.d*S/2,0.001,contData.w*S/2);fm.userData.dyn=true;scene.add(fm);
+            // Door
+            if(!isFR2){const dm=new THREE.Mesh(new THREE.PlaneGeometry(contData.w*S*0.92,contData.h*S*0.92),new THREE.MeshPhongMaterial({color:0xf0883e,transparent:true,opacity:0.12,side:THREE.DoubleSide}));dm.rotation.y=Math.PI/2;dm.position.set(contData.d*S+0.002,contData.h*S/2,contData.w*S/2);dm.userData.dyn=true;scene.add(dm)}
+            // Cargo boxes
+            if(placedData&&placedData.length)placedData.forEach((p,i)=>{const col=new THREE.Color(p.color||COLORS[i%COLORS.length]);const mesh=new THREE.Mesh(new THREE.BoxGeometry(p.pd*S,p.ph*S,p.pw*S),new THREE.MeshPhongMaterial({color:col,transparent:true,opacity:0.75}));mesh.position.set((p.x+p.pd/2)*S,(p.z+p.ph/2)*S,(p.y+p.pw/2)*S);mesh.userData.dyn=true;scene.add(mesh);const ln=new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry),new THREE.LineBasicMaterial({color:0x000000}));ln.position.copy(mesh.position);ln.userData.dyn=true;scene.add(ln)});
+            // CG marker
+            if(cgData){const ccc=cgData.status==="ok"?0x3fb950:cgData.status==="warning"?0xd29922:0xf85149;const sm=new THREE.Mesh(new THREE.SphereGeometry(0.035,16,16),new THREE.MeshPhongMaterial({color:ccc,emissive:ccc,emissiveIntensity:0.6}));sm.position.set(cgData.x*S,cgData.z*S,cgData.y*S);sm.userData.dyn=true;scene.add(sm)}
+            // Camera position
+            const phi=Math.PI/4,theta=Math.PI/4,dist=2.8,tx=mxD*S/2,ty=mxH*S/2,tz=mxW*S/2;
+            camera.position.set(tx+dist*Math.sin(phi)*Math.cos(theta),ty+dist*Math.cos(phi),tz+dist*Math.sin(phi)*Math.sin(theta));
+            camera.lookAt(tx,ty,tz);
+            renderer.render(scene,camera);
+            const imgData=cvs.toDataURL("image/png");
+            // Restore bg
+            scene.background=origBg;
+            if(grd)grd.visible=true;
+            return imgData;
+          }catch(e){return null}
+        };
+
+        containersList.forEach((cc,ci)=>{
+          doc.addPage();y=M;
+          const subTitle=isMulti?("Kontener "+(ci+1)+" / "+containersList.length+" — "+cc.container.name):cc.container.name;
+          // Mini header
+          doc.setFillColor(24,55,110);doc.rect(0,0,W,14,"F");
+          try{doc.addImage(LOGO_WHITE,"JPEG",M,1.5,22,9)}catch(e){}
+          doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(255,255,255);
+          doc.text(subTitle,M+26,7);
+          doc.setFontSize(7);doc.setTextColor(200,210,230);
+          if(isMulti) doc.text("Wariant: "+variantLabel,M+26,12);
+          doc.setFontSize(7);doc.setTextColor(220,230,245);
+          if(refNum)doc.text("Ref: "+refNum,W-M,6,{align:"right"});
+          doc.text(now,W-M,11,{align:"right"});
+          y=19;
+          // Container specs
+          doc.setDrawColor(180,180,180);doc.setFillColor(245,247,250);
+          doc.roundedRect(M,y,W-2*M,10,2,2,"FD");
+          doc.setFontSize(7.5);dark();
+          doc.text("Wymiary wewn.: "+fmt(cc.container.d)+" x "+fmt(cc.container.w)+" x "+fmt(cc.container.h)+" mm    |    Ladownosc: "+fmt(cc.container.payload)+" kg    |    Kubatura: "+(cc.container.volume||"—")+" m\u00B3    |    Typ: "+cc.container.type,M+4,y+6.5);
+          y+=14;
+          // Stats
+          if(cc.placed.length>0) drawStats(cc);
+          // 3D screenshot — rebuild scene for THIS container
+          const imgData=captureContainer(cc.container,cc.placed,cc.cg);
+          if(imgData&&threeRef){
+            try{
+              const cvs=threeRef.renderer.domElement;
+              const maxImgH=H-y-M-4;
+              if(maxImgH>30){
+                const imgAspect=cvs.width/cvs.height;
+                let finalW=W-2*M,finalH=finalW/imgAspect;
+                if(finalH>maxImgH){finalH=maxImgH;finalW=finalH*imgAspect}
+                doc.setDrawColor(200,200,200);
+                doc.roundedRect(M+(W-2*M-finalW)/2-0.5,y-0.5,finalW+1,finalH+1,1,1,"D");
+                doc.addImage(imgData,"PNG",M+(W-2*M-finalW)/2,y,finalW,finalH);
+                y+=finalH+4;
+              }
+            }catch(e){}
+          }
+          // Loading instructions
+          drawLoadingTable(cc.placed);
+        });
+        // Restore original view — rebuild scene for active container with dark bg
+        if(threeRef){
+          const ac=containersList[activeContIdx]||containersList[0];
+          if(ac){
+            captureContainer(ac.container,ac.placed,ac.cg);
+            // Restore dark background & grid
+            threeRef.scene.background=new THREE.Color(0x0d1117);
+            const grd2=threeRef.scene.children.find(c2=>c2.isGridHelper);
+            if(grd2)grd2.visible=true;
+            // Floor color back to dark
+            threeRef.scene.children.filter(c2=>c2.userData&&c2.userData.dyn&&c2.isMesh&&c2.geometry.type==="PlaneGeometry"&&c2.rotation.x!=0).forEach(c2=>{if(c2.material)c2.material.color.set(0x161b22)});
+            threeRef.renderer.render(threeRef.scene,threeRef.camera);
+          }
+        }
+
+        // Footers on all pages
+        const np=doc.internal.getNumberOfPages();
+        for(let pg=1;pg<=np;pg++){
+          doc.setPage(pg);
+          doc.setDrawColor(200,200,200);doc.line(M,H-8,W-M,H-8);
+          doc.setFontSize(5.5);gray();
+          doc.text("Wygenerowano: "+now+"   |   M&M Militzer & Münch — Container Load Planner",M,H-4.5);
+          doc.text("Strona "+pg+"/"+np,W-M,H-4.5,{align:"right"});
+        }
+
+        doc.save("zaladun"+"ek-"+(refNum||"plan")+".pdf");
+      };
+
+      // Current visualization data
+      let viewCont, viewPlaced, viewCG, viewWt, viewVolUsed, viewOverhang;
+      if (mode === "auto" && autoResult && autoResult.results && autoResult.results.length > 0) {
+        const ar = autoResult.results[activeAutoIdx];
+        if (ar && ar.containers[activeContIdx]) {
+          const ac = ar.containers[activeContIdx];
+          viewCont = ac.container;
+          viewPlaced = ac.placed;
+          viewCG = ac.cg;
+          viewWt = ac.totalWeight;
+          viewVolUsed = ac.usedVol;
+          viewOverhang = ac.overhang;
+        }
+      } else if (mode === "manual" && result) {
+        viewCont = cont;
+        viewPlaced = result.placed;
+        viewCG = result.cg;
+        viewWt = result.totalWeight;
+        viewVolUsed = result.placed.reduce((s,p)=>s+p.pd*p.pw*p.ph,0)/1e9;
+        viewOverhang = result.overhang;
+      }
+      if (!viewCont) viewCont = cont;
+      if (!viewPlaced) viewPlaced = [];
+
+      const hovItem = viewPlaced.find(p=>p.iid===hov);
+      const rWPct = viewWt ? (viewWt/viewCont.payload*100) : 0;
+      const rVPct = viewVolUsed && viewCont.volume ? (viewVolUsed/viewCont.volume*100) : 0;
+
+      return (
+        <div className="bg-dark text-main" data-busy={busy} data-mode={mode} style={{height:"100vh",display:"flex",flexDirection:"column",fontFamily:"'JetBrains Mono',monospace"}}>
+
+          {/* ===== HEADER ===== */}
+          <header className="app-header" role="banner">
+            <div className="flex items-center gap-3">
+              <img src={LOGO_WHITE} alt="M&M Militzer & Münch" style={{height:32,objectFit:"contain"}} />
+              <div style={{width:1,height:24,background:"#30363d"}} />
+              <div>
+                <h1 className="font-bold tracking-tight" style={{fontSize:14,fontFamily:"'Space Grotesk',sans-serif",margin:0,lineHeight:1.2}}>Container Load Planner</h1>
+                <p className="text-muted" style={{fontSize:9,margin:0}}>Kalkulator załadunku kontenerów morskich</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <input className="input-field" style={{width:130,fontSize:10}} placeholder="Nr referencyjny..." value={refNum} onChange={e=>setRefNum(e.target.value)} aria-label="Numer referencyjny" />
+            </div>
+          </header>
+
+          {/* ===== BENTO GRID ===== */}
+          <div className="bento">
+
+            {/* ===== SIDEBAR ===== */}
+            <aside className="bento-sidebar bg-card" role="navigation" aria-label="Konfiguracja">
+              <div className="flex" role="tablist" aria-label="Zakładki" style={{borderBottom:"1px solid #30363d"}}>
+                {[["container","📦 Kontener"],["cargo","🏗️ Ładunki"],["settings","⚙️ Akcje"]].map(([k,l])=>(
+                  <div key={k} className="tab" role="tab" aria-selected={tab===k} tabIndex={tab===k?0:-1} onClick={()=>setTab(k)} onKeyDown={e=>{if(e.key==="Enter"||e.key===" ")setTab(k)}}>{l}</div>
+                ))}
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-3" role="tabpanel">
+                {/* CONTAINER TAB */}
+                {tab==="container" && (
+                  <div className="space-y-3 fade-in">
+                    <div>
+                      <label className="text-xs font-medium block mb-1" htmlFor="sel-cont">Typ kontenera</label>
+                      <select id="sel-cont" className="input-field" value={selCont} onChange={e=>{setSelCont(e.target.value);setResult(null);setAutoResult(null)}}>
+                        {CONTAINERS.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="bg-card-inner rounded p-3 text-xs space-y-2">
+                      <div className="flex justify-between"><span className="text-muted">Wymiary wewn.:</span><span className="font-medium">{fmtDim(cont.d,cont.w,cont.h)} mm</span></div>
+                      <div className="flex justify-between"><span className="text-muted">Ładowność:</span><span className="font-medium">{fmt(cont.payload)} kg</span></div>
+                      {cont.volume&&<div className="flex justify-between"><span className="text-muted">Kubatura:</span><span className="font-medium">{cont.volume} m³</span></div>}
+                      {cont.type==="reefer"&&<div className="alert-warn mt-2">⚠️ Reefer — wymiary mniejsze ze wzgl. na agregat.</div>}
+                      {cont.type==="opentop"&&<div className="alert-info mt-2">ℹ️ Open Top — ładunek może wystawać ponad dach.</div>}
+                      {cont.type==="flatrack"&&<div className="alert-warn mt-2">⚠️ Flat Rack — brak ścian bocznych.</div>}
+                      <svg viewBox="0 0 260 90" style={{width:"100%",marginTop:8}} aria-hidden="true">
+                        <rect x="20" y="8" width="195" height="62" fill="none" stroke="#388bfd" strokeWidth="1.2" strokeDasharray="4 2" rx="2"/>
+                        <text x="117" y="43" textAnchor="middle" fill="#7d8590" fontSize="7" fontFamily="inherit">{fmt(cont.d)} mm</text>
+                        <text x="228" y="42" fill="#7d8590" fontSize="6.5" fontFamily="inherit">{fmt(cont.h)}</text>
+                        <text x="117" y="82" textAnchor="middle" fill="#7d8590" fontSize="6.5" fontFamily="inherit">{fmt(cont.w)} mm szer.</text>
+                        <line x1="215" y1="8" x2="215" y2="70" stroke="#f0883e" strokeWidth="2"/>
+                        <text x="225" y="75" fill="#f0883e" fontSize="5.5" fontFamily="inherit">DRZWI</text>
+                      </svg>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium block mb-1" htmlFor="op-wt">Limit wagowy operatora (kg) <span className="text-muted" style={{fontWeight:400}}>— opcjonalnie</span></label>
+                      <input id="op-wt" className="input-field" type="number" placeholder={`Max: ${fmt(cont.payload)} kg`} value={opWt} onChange={e=>setOpWt(e.target.value)}/>
+                      <p className="text-muted mt-1" style={{fontSize:10}}>Obowiązujący limit: <strong className="text-main">{fmt(effWt)} kg</strong></p>
+                    </div>
+                    <div className="alert-warn" style={{fontSize:10}}>⚖️ <strong>VGM (SOLAS)</strong>: Pamiętaj o weryfikacji masy brutto kontenera.</div>
+                  </div>
+                )}
+
+                {/* CARGO TAB */}
+                {tab==="cargo" && (
+                  <div className="space-y-2 fade-in">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs text-muted">{cargo.length} typ(ów) · {totPcs} szt.</span>
+                      <div className="flex gap-1">
+                        <button className="btn btn-secondary" style={{fontSize:10}} onClick={exportCSV} aria-label="Eksportuj CSV">📤 CSV</button>
+                        <button className="btn btn-primary" style={{fontSize:11}} onClick={()=>{setEditId(null);setNc({...emptyC,color:COLORS[cargo.length%COLORS.length]});setShowAdd(true)}} aria-label="Dodaj ładunek">+ Dodaj</button>
+                      </div>
+                    </div>
+
+                    {cargo.map(c=>(
+                      <div key={c.id} className="cargo-card fade-in" data-editing={editId===c.id} tabIndex={0} aria-label={`${c.name}, ${c.qty} szt.`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <div style={{width:10,height:10,borderRadius:2,background:c.color,flexShrink:0}} aria-hidden="true"/>
+                          <span className="font-medium flex-1 truncate">{c.name}</span>
+                          <span className="text-muted">×{c.qty}</span>
+                        </div>
+                        <div className="text-muted" style={{fontSize:10}}>{fmtDim(c.d,c.w,c.h)} mm · {fmt(c.weight)} kg/szt.</div>
+                        <div className="flex gap-2 mt-1" style={{fontSize:10}}>
+                          {c.stackable&&<span className="tag tag-green">Piętrowalny</span>}
+                          {c.fragile&&<span className="tag tag-red">Kruchy</span>}
+                          {c.thisUp&&<span className="tag tag-yellow">This Side Up</span>}
+                        </div>
+                        <div className="flex gap-1 mt-2">
+                          <button className="btn btn-action" style={{fontSize:10,padding:"2px 8px"}} onClick={()=>startEdit(c.id)} aria-label={`Edytuj ${c.name}`}>✏️ Edytuj</button>
+                          <button className="btn btn-secondary" style={{fontSize:10,padding:"2px 8px"}} onClick={()=>dupCargo(c.id)}>Duplikuj</button>
+                          <button className="btn btn-danger" style={{fontSize:10,padding:"2px 8px"}} onClick={()=>delCargo(c.id)}>Usuń</button>
+                        </div>
+                      </div>
+                    ))}
+
+                    {cargo.length===0&&!showAdd&&<div className="text-center text-muted" style={{padding:"40px 0",fontSize:11}} role="status">Brak ładunków.<br/>Kliknij „+ Dodaj" aby rozpocząć.</div>}
+
+                    {showAdd && (
+                      <div className="bg-card rounded-lg p-3 space-y-2 fade-in" style={{border:editId?"1px solid #388bfd":"1px solid #30363d"}} role="form" aria-label={editId?"Edycja ładunku":"Nowy ładunek"}>
+                        <div className="flex justify-between items-center"><span className="text-sm font-medium">{editId?"✏️ Edycja ładunku":"Nowy ładunek"}</span><button className="text-muted cursor-pointer btn btn-secondary" style={{fontSize:14,padding:"0 6px",border:"none"}} onClick={cancelForm} aria-label="Zamknij">✕</button></div>
+                        <input className="input-field" placeholder="Nazwa ładunku *" value={nc.name} onChange={e=>setNc(p=>({...p,name:e.target.value}))} aria-label="Nazwa ładunku" aria-required="true"/>
+                        <select className="input-field" value={nc.type} onChange={e=>typeChange(e.target.value)} aria-label="Typ ładunku">{CARGO_TYPES.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select>
+                        <div className="grid grid-3 gap-2">
+                          {[["d","Dł."],["w","Szer."],["h","Wys."]].map(([k,l])=>(<div key={k}><label className="text-muted" style={{fontSize:10}}>{l} (mm)</label><input className="input-field" type="number" value={nc[k]} onChange={e=>setNc(p=>({...p,[k]:+e.target.value}))} aria-label={l+" mm"}/></div>))}
+                        </div>
+                        <div className="grid grid-2 gap-2">
+                          <div><label className="text-muted" style={{fontSize:10}}>Waga szt. (kg)</label><input className="input-field" type="number" value={nc.weight} onChange={e=>setNc(p=>({...p,weight:+e.target.value}))} aria-label="Waga"/></div>
+                          <div><label className="text-muted" style={{fontSize:10}}>Ilość</label><input className="input-field" type="number" min="1" value={nc.qty} onChange={e=>setNc(p=>({...p,qty:Math.max(1,+e.target.value)}))} aria-label="Ilość"/></div>
+                        </div>
+                        <div><label className="text-muted block mb-1" style={{fontSize:10}}>Dozwolone rotacje</label>{ROTATION_OPTS.map(r=>(<label key={r.id} className="flex items-center gap-2 cursor-pointer" style={{fontSize:11,marginBottom:2}}><input type="checkbox" checked={nc.rotations.includes(r.id)} onChange={e=>{setNc(p=>({...p,rotations:e.target.checked?[...p.rotations.filter(x=>x!=="none"),r.id]:p.rotations.filter(x=>x!==r.id)}))}}/>{r.label}</label>))}</div>
+                        <div className="flex gap-4" style={{fontSize:11}}>
+                          <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={nc.stackable} onChange={e=>setNc(p=>({...p,stackable:e.target.checked}))}/> Piętrowalny</label>
+                          <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={nc.fragile} onChange={e=>setNc(p=>({...p,fragile:e.target.checked}))}/> Kruchy</label>
+                          <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={nc.thisUp} onChange={e=>setNc(p=>({...p,thisUp:e.target.checked}))}/> This Side Up</label>
+                        </div>
+                        {nc.stackable&&(<div className="grid grid-2 gap-2"><div><label className="text-muted" style={{fontSize:10}}>Max obciążenie (kg)</label><input className="input-field" type="number" value={nc.maxStackWeight} onChange={e=>setNc(p=>({...p,maxStackWeight:+e.target.value}))}/></div><div><label className="text-muted" style={{fontSize:10}}>Max warstw</label><input className="input-field" type="number" min="1" value={nc.maxLayers} onChange={e=>setNc(p=>({...p,maxLayers:Math.max(1,+e.target.value)}))}/></div></div>)}
+                        <div className="grid grid-2 gap-2"><div><label className="text-muted" style={{fontSize:10}}>Kolor</label><input type="color" style={{width:"100%",height:30,borderRadius:4,cursor:"pointer",border:"none"}} value={nc.color} onChange={e=>setNc(p=>({...p,color:e.target.value}))}/></div><div><label className="text-muted" style={{fontSize:10}}>Priorytet rozładunku</label><input className="input-field" type="number" min="1" placeholder="1 = pierwszy" value={nc.priority} onChange={e=>setNc(p=>({...p,priority:e.target.value?+e.target.value:""}))}/></div></div>
+                        {nc.type==="beczka"&&<div className="alert-warn" style={{fontSize:10}}>🛢️ Beczka na boku wymaga zabezpieczenia przed toczeniem.</div>}
+                        <div className="flex gap-2">{editId?(<button className="btn btn-action w-full" style={{padding:"8px 0",fontSize:13}} onClick={saveCargo}>💾 Zapisz zmiany</button>):(<button className="btn btn-primary w-full" style={{padding:"8px 0",fontSize:13}} onClick={addCargo}>Dodaj ładunek</button>)}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* SETTINGS TAB */}
+                {tab==="settings" && (
+                  <div className="space-y-4 fade-in">
+                    <div><label className="text-xs font-medium block mb-2">Import / Eksport</label>
+                      <div className="space-y-2">
+                        <button className="btn btn-secondary w-full" onClick={exportJSON}>💾 Eksportuj konfigurację (JSON)</button>
+                        <label className="btn btn-secondary w-full block text-center cursor-pointer" style={{position:"relative"}}>📂 Importuj konfigurację (JSON)<input type="file" accept=".json" style={{position:"absolute",opacity:0,width:"100%",height:"100%",top:0,left:0,cursor:"pointer"}} onChange={importJSON}/></label>
+                        <button className="btn btn-secondary w-full" onClick={exportCSV}>📤 Eksportuj ładunki (CSV)</button>
+                        <button className="btn btn-secondary w-full" disabled={viewPlaced.length===0} onClick={exportPDF}>📄 Generuj raport PDF</button>
+                        <button className="btn btn-danger w-full" onClick={()=>{setCargo([]);setResult(null);setAutoResult(null)}}>🗑️ Resetuj wszystko</button>
+                      </div>
+                    </div>
+                    <div><label className="text-xs font-medium block mb-2">Szablony szybkiego dodawania</label>
+                      <div className="space-y-1">
+                        {[{name:"Paleta EUR z towarem",d:1200,w:800,h:1500,weight:750,type:"paleta",qty:20},{name:"Paleta EUR niska",d:1200,w:800,h:1000,weight:500,type:"paleta",qty:30},{name:"Karton standardowy",d:600,w:400,h:400,weight:25,type:"karton",qty:100},{name:"Beczka 200L",d:600,w:600,h:900,weight:200,type:"beczka",qty:10},{name:"Skrzynia maszynowa",d:2000,w:1200,h:1500,weight:2000,type:"skrzynia",qty:3}].map((t,i)=>(
+                          <button key={i} className="btn btn-secondary w-full text-left" style={{fontSize:10,padding:"6px 8px"}} onClick={()=>addTemplate(t)}>+ {t.name} ({t.qty} szt.)</button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </aside>
+
+            {/* ===== 3D VIEWPORT ===== */}
+            <main ref={viewportRef} className="bento-viewport" aria-label="Wizualizacja 3D">
+              <Viewer3D container={viewCont} placed={viewPlaced} cg={viewCG} hoveredId={hov} onHover={setHov}/>
+
+              {hovItem&&(<div className="absolute pointer-events-none fade-in" style={{top:12,left:12,background:"rgba(0,0,0,0.85)",backdropFilter:"blur(8px)",borderRadius:8,padding:10,fontSize:11,color:"#e6edf3",border:"1px solid rgba(255,255,255,0.08)",maxWidth:260}} role="tooltip"><div className="font-medium" style={{marginBottom:4}}>{hovItem.name}</div><div className="text-muted" style={{fontSize:10,lineHeight:1.6}}>Orientacja: {hovItem.pd} × {hovItem.pw} × {hovItem.ph} mm<br/>Waga: {fmt(hovItem.weight)} kg<br/>Pozycja: ({fmt(Math.round(hovItem.x))}, {fmt(Math.round(hovItem.y))}, {fmt(Math.round(hovItem.z))}) mm</div></div>)}
+
+              <div className="absolute" style={{bottom:12,right:12,display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}>
+                <button className="btn btn-action shadow-lg" style={{padding:"10px 16px",fontSize:13,fontWeight:600}} disabled={cargo.length===0||busy} onClick={optimize} aria-label="Załaduj do wybranego">
+                  {busy&&mode==="manual"?"⏳ Optymalizuję...":"📦 Załaduj do wybranego"}
+                </button>
+                <button className="btn btn-auto shadow-lg" style={{padding:"10px 16px",fontSize:13}} disabled={cargo.length===0||busy} onClick={autoOptimize} aria-label="Auto-dobór kontenerów">
+                  {busy&&mode==="auto"?"⏳ Analizuję...":"🤖 Dobierz kontenery automatycznie"}
+                </button>
+              </div>
+
+              <div className="absolute" style={{top:12,right:12,background:"rgba(0,0,0,0.6)",backdropFilter:"blur(6px)",borderRadius:8,padding:8,fontSize:10,color:"rgba(230,237,243,0.8)",lineHeight:1.7}} aria-live="polite">
+                <div>📦 {viewCont.name}</div>
+                <div>Ładunki: {totPcs} szt. ({cargo.length} typów)</div>
+                {mode==="auto"&&autoResult&&autoResult.results&&<div className="text-accent" style={{fontWeight:600}}>🤖 Tryb automatyczny</div>}
+              </div>
+              <div className="absolute text-muted" style={{bottom:12,left:12,fontSize:9,opacity:0.5}} aria-hidden="true">LPM: obracanie · Scroll: zoom · PPM: przesuwanie</div>
+            </main>
+
+            {/* ===== ANALYTICS PANEL ===== */}
+            <section className="bento-analytics bg-card p-3" aria-label="Statystyki załadunku">
+
+              {/* Auto results */}
+              {mode==="auto"&&autoResult&&(
+                <div className="fade-in" style={{marginBottom:12}} role="region" aria-label="Wyniki auto-doboru">
+                  {autoResult.error?(<div className="alert-danger" role="alert">{autoResult.error}</div>):(
+                    <div>
+                      <div className="text-xs font-medium mb-2" style={{fontFamily:"'Space Grotesk',sans-serif"}}>🤖 Wyniki automatycznego doboru kontenerów</div>
+                      <div className="space-y-2" role="listbox" aria-label="Warianty">
+                        {autoResult.results.slice(0,5).map((r,i)=>{
+                          const avgVol=r.containers.reduce((s,c)=>s+c.volPct,0)/r.totalContainers;
+                          const isActive=i===activeAutoIdx;
+                          return (
+                            <div key={i} className="mc" role="option" aria-selected={isActive} onClick={()=>{setActiveAutoIdx(i);setActiveContIdx(0)}} tabIndex={0} onKeyDown={e=>{if(e.key==="Enter"){setActiveAutoIdx(i);setActiveContIdx(0)}}}>
+                              <div className="flex justify-between items-center">
+                                <div><span className="text-sm font-medium">{r.label}</span>{i===0&&<span className="tag tag-green" style={{marginLeft:8}}>Zalecane</span>}</div>
+                                <span className={`text-xs font-medium ${r.allPlaced?"text-green":"text-red"}`}>{r.allPlaced?"✅ Wszystko mieści się":"❌ Nie mieści się"}</span>
+                              </div>
+                              <div className="text-muted text-xs" style={{marginTop:4}}>Śr. wypełnienie: {avgVol.toFixed(1)}% obj. · Łączna ładowność: {fmt(r.totalPayload)} kg</div>
+                              {isActive&&r.containers.length>1&&(
+                                <div className="flex gap-1 mt-2 flex-wrap" role="tablist">
+                                  {r.containers.map((cc,ci)=>(
+                                    <button key={ci} className={`btn ${ci===activeContIdx?"btn-action":"btn-secondary"}`} role="tab" aria-selected={ci===activeContIdx} style={{fontSize:10,padding:"3px 10px"}} onClick={e=>{e.stopPropagation();setActiveContIdx(ci)}}>{ci+1}: {cc.container.name.split(" ")[0]}</button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ===== BENTO GAUGE CARDS ===== */}
+              <div className="grid grid-5 gap-3" role="region" aria-label="Wskaźniki">
+                <Gauge value={viewWt||0} max={viewCont.payload} label="Waga" unit="kg" color="#238636" />
+                <Gauge value={viewVolUsed||0} max={viewCont.volume||0} label="Objętość" unit="m³" color="#1f6feb" />
+                <CGCard cg={viewCG} />
+                <LoadedCard count={viewPlaced.length} />
+                <OOGCard overhang={viewOverhang} />
+              </div>
+
+              {/* Loading steps + PDF */}
+              {viewPlaced.length>0&&(
+                <div style={{marginTop:10}}>
+                  <div className="flex justify-between items-center">
+                    <details style={{flex:1}}><summary className="text-muted text-xs">📋 Instrukcja załadunku ({viewPlaced.length} kroków)</summary>
+                      <div className="bg-card-inner rounded p-2 mt-2" style={{maxHeight:160,overflowY:"auto",fontSize:10}} role="table">
+                        {viewPlaced.map((p,i)=>(<div key={i} className="flex gap-2" style={{padding:"4px 0",borderTop:i>0?"1px solid #21262d":"none"}}><span className="text-accent font-medium" style={{width:28,flexShrink:0}}>#{i+1}</span><div><span className="font-medium">{p.name}</span><span className="text-muted"> — {p.pd}×{p.pw}×{p.ph}mm, {p.weight}kg</span><div className="text-muted">Poz: ({Math.round(p.x)}, {Math.round(p.y)}, {Math.round(p.z)}) mm{p.pd!==p.d||p.pw!==p.w?" · obrócony":""}</div></div></div>))}
+                      </div>
+                    </details>
+                    <button className="btn btn-secondary" style={{fontSize:10,padding:"3px 10px",marginLeft:8,flexShrink:0}} onClick={exportPDF} aria-label="Generuj PDF">📄 PDF</button>
+                  </div>
+                </div>
+              )}
+
+              {viewCG&&viewCG.status!=="ok"&&(
+                <div className={viewCG.status==="warning"?"alert-warn":"alert-danger"} style={{marginTop:8,fontSize:10}} role="alert">
+                  {viewCG.status==="danger"?"🚨":"⚠️"} <strong>Środek ciężkości poza optymalnym zakresem.</strong>{" "}
+                  {!viewCG.axOk&&`Osiowo: ${viewCG.axPct.toFixed(1)}% (norma: 40-60%). `}
+                  {!viewCG.latOk&&`Poprzecznie: ±${viewCG.latDev.toFixed(1)}% (max 5%). `}
+                </div>
+              )}
+
+              {viewOverhang&&(
+                <div className="alert-warn" style={{marginTop:8,fontSize:10}} role="alert">
+                  📐 <strong>Ładunek wystaje poza wymiary kontenera{viewOverhang.isFR?" (Flat Rack)":" (Open Top)"}:</strong>
+                  <div style={{marginTop:4,lineHeight:1.8}}>
+                    {viewOverhang.overH>0&&<span style={{display:"inline-block",marginRight:12}}>↑ Góra: <strong className="text-yellow">+{viewOverhang.overH} cm</strong></span>}
+                    {viewOverhang.overW>0&&<span style={{display:"inline-block",marginRight:12}}>↔ Boki: <strong className="text-yellow">+{viewOverhang.overW} cm</strong></span>}
+                  </div>
+                  <div className="text-muted" style={{marginTop:2}}>
+                    Wymiary ładunku: {Math.round(viewOverhang.maxX/10)} × {Math.round(viewOverhang.maxY/10)} × {Math.round(viewOverhang.maxZ/10)} cm
+                    {" "}(kontener: {Math.round(viewCont.d/10)} × {Math.round(viewCont.w/10)} × {Math.round(viewCont.h/10)} cm)
+                  </div>
+                  {viewOverhang.isFR&&<div className="text-muted" style={{marginTop:2}}>⚠️ Wymagane zabezpieczenie boczne i oznakowanie OOG.</div>}
+                  {viewOverhang.isOT&&viewOverhang.overH>0&&<div className="text-muted" style={{marginTop:2}}>⚠️ Wymagana plandeka lub oznakowanie ładunku wystającego.</div>}
+                </div>
+              )}
+            </section>
+          </div>
+        </div>
+      );
+
+    }
+
+    ReactDOM.render(<App/>,document.getElementById("root"));
+  </script>
+</body>
+</html>

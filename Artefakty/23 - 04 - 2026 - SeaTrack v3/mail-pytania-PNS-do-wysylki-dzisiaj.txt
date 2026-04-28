@@ -1,0 +1,37 @@
+Temat: SeaTrack v3 - pytania przygotowawcze do instalacji (poniedziałek 24.04)
+
+Cześć,
+
+Dziękuję za potwierdzenie stworzenia serwera Ubuntu. Aby zainstalacja w poniedziałek przebiegła sprawnie, mam kilka pytań przygotowawczych:
+
+1. DOSTĘP SSH I KATALOG
+   - Jaki będzie docelowy katalog aplikacji? (np. /opt/seatrackv3)
+   - Jaki user/hasło lub klucz SSH do logowania?
+   - Czy katalog już istnieje czy go tworzyć?
+
+2. KONFIGURACJA APLIKACJI (.env)
+   - Gdzie powinien być plik .env? W katalogu aplikacji? (/opt/seatrackv3/.env)
+   - Czy credentials do API armatorów (Maersk, CMA, Hapag) są już dostępne czy będę je poskładać sam?
+   - Czy będzie SMTP relay dostępny w firmie czy zaznaczamy w konfiguracji inną opcję?
+
+3. NPM I MENEDŻER PROCESÓW
+   - Czy na serwerze jest zainstalowany Node.js i npm?
+   - Czy PM2 jest zainstalowany (npm i -g pm2)?
+   - Jeśli nie - kto to instaluje: ja (przez SSH) czy IT?
+
+4. PRZECHOWYWANIE PLIKÓW
+   - Gdzie umieścić katalog uploads/ dla załączników? (lokalnie na /opt czy na wskazanym NAS?)
+   - Ścieżka do logu (./logs lub inny katalog)?
+
+5. FIREWALL I SIEĆ
+   - Która osoba w Waszym zespole będzie się zajmować Palo Alto? (żebym wiedział kto będzie potrzebował listy outbound rules)
+   - Kiedy możemy liczyć na otwarcie portów 443 (do API armatorów) i mail relay?
+
+6. HARMONOGRAM I PROCEDURY
+   - W poniedziałek - o której godzinie mogę zacząć instalację?
+   - Czy będzie dostęp do serwera 24/7 czy tylko w godzinach pracy?
+   - Czy testy backup/odtworzenie będą po instalacji czy przed?
+
+Dziękuję za szybkie odpowiedzi - zależy mi żeby w poniedziałek zainstalować to sprawnie.
+
+Karol
