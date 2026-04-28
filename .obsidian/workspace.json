@@ -1,0 +1,204 @@
+{
+  "main": {
+    "id": "3de2ae01e95b2be2",
+    "type": "split",
+    "children": [
+      {
+        "id": "4934ecbe74e06f54",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "280c5afd774566f4",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Obsidian/Karol-KB/ja/rozwoj/Wielki Plan Czytelniczy.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Wielki Plan Czytelniczy"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "042d7b6855a4d2df",
+    "type": "split",
+    "children": [
+      {
+        "id": "9bcb189d1fcdf07d",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "fc671a3caba9e2b0",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Przeglądarka plików"
+            }
+          },
+          {
+            "id": "40648412b3d405cd",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Wyszukiwarka"
+            }
+          },
+          {
+            "id": "2d0013af1aacff90",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Ulubione"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "7668eede32d74508",
+    "type": "split",
+    "children": [
+      {
+        "id": "5d12a87743dd0a73",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "2194809608ddbcc9",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Obsidian/Karol-KB/ja/rozwoj/Wielki Plan Czytelniczy.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Linki zwrotne do Wielki Plan Czytelniczy"
+            }
+          },
+          {
+            "id": "fa58bd1544aa8079",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Obsidian/Karol-KB/ja/rozwoj/Wielki Plan Czytelniczy.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Łącza wychodzące od Wielki Plan Czytelniczy"
+            }
+          },
+          {
+            "id": "54726f67d5efb9c6",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tagi"
+            }
+          },
+          {
+            "id": "37960e880fa03f27",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Wszystkie atrybuty"
+            }
+          },
+          {
+            "id": "d9c532f86d06b558",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Obsidian/Karol-KB/ja/rozwoj/Wielki Plan Czytelniczy.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Konspekt Wielki Plan Czytelniczy"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Otwórz okno szybkiego wyboru": false,
+      "graph:Otwórz podgląd grafu": false,
+      "canvas:Stwórz nową tablicę": false,
+      "daily-notes:Otwórz dzisiejszy dziennik": false,
+      "templates:Wstaw szablon": false,
+      "command-palette:Otwórz listę poleceń": false,
+      "bases:Stwórz nową bazę danych": false
+    }
+  },
+  "active": "280c5afd774566f4",
+  "lastOpenFiles": [
+    "Artefakty/18 - 04 - 2026 - Graphify/graphify-out-prev/cache/fd24c008d3c1e2342f98ca6c158b6cbbbc8ca21c581ed666a04d71796dd185ac.json",
+    "Artefakty/18 - 04 - 2026 - Graphify/graphify-out-prev/cache/fbd55479733a7aa5534b51385e07b3df34abf75d3f617cc1e8843f2de8b9145f.json",
+    "Artefakty/18 - 04 - 2026 - Graphify/graphify-out-prev/cache/fa0b39158110ed6b244440d2ea2404287ceef8d6060d4e609df1ff67a7e934e6.json",
+    "Artefakty/18 - 04 - 2026 - Graphify/graphify-out-prev/cache/f78174424630c78db39f56c2cdefabc756bbe6ae476ae36b125e5206a7918187.json",
+    "Artefakty/18 - 04 - 2026 - Graphify/graphify-out-prev/cache/f76f82c329f3bbb9917f10f15343270fff2a71e6926af0c875060883c6b35979.json",
+    "Artefakty/18 - 04 - 2026 - Graphify/graphify-out-prev/cache/ef943c110328621766a2fd4ce363b12cb60295df3f7d82e06a7e39a4530554c5.json",
+    "Artefakty/18 - 04 - 2026 - Graphify/graphify-out-prev/cache/ea5fc193dc628f822c12ad3d982542e2f49a5f3bd20b794a9351715e01914084.json",
+    "Artefakty/18 - 04 - 2026 - Graphify/graphify-out-prev/cache/e9052947b60af1f09b285694ffa506ebd78d1b9db21bca7bd3649e679becc520.json",
+    "Artefakty/18 - 04 - 2026 - Graphify/graphify-out-prev/cache/e4b66bfb710ef4885a55ee893bd558b9a1a8eb2449d2c6a1e92342d72496cdc0.json",
+    "Artefakty/18 - 04 - 2026 - Graphify/graphify-out-prev/cache/e43b064128bd3124dd5ad3cb97449c4d2bb8a4be64b097ddc6dd61bc03b87ff7.json",
+    "Artefakty/18 - 04 - 2026 - Graphify/graphify-out-prev/cache/df413281151179363207925ba42798424a0ea926b01c529b1be539552f3184b7.json",
+    "Artefakty/18 - 04 - 2026 - Graphify/graphify-out-prev/GRAPH_REPORT.md",
+    "Artefakty/18 - 04 - 2026 - Graphify/graphify-out/GRAPH_REPORT.md",
+    "Obsidian/Karol-KB/graphify-out/GRAPH_REPORT.md",
+    "graphify-out-prev/GRAPH_REPORT.md"
+  ]
+}

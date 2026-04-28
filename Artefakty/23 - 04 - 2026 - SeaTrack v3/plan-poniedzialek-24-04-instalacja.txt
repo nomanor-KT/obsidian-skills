@@ -1,0 +1,79 @@
+PONIEDZIAŁEK 24.04.2026 - PLAN INSTALACJI SeaTrack v3 NA LINUX
+
+STATUS: Serwer Linux Ubuntu jest gotowy. PNS będzie mnie kontaktować.
+CEL: Zainstalować kod, skonfigurować, uruchomić backend, uzgodnić firewall.
+
+PRZED SPOTKANIEM (przygotowanie domowe):
+
+1. Przygotuj dostępy i dane:
+   [ ] SSH access do serwera (user, hasło/klucz)
+   [ ] Katalog docelowy na serwerze (np. /opt/seatrackv3)
+   [ ] Plik .env z konfiguracja:
+       - MAIL_FROM=...
+       - SMTP_HOST / RESEND_API_KEY (w zależności od modelu)
+       - TRACKING_SOURCE=maersk|cma|hapag|mock
+       - MAERSK_CONSUMER_KEY / MAERSK_CONSUMER_SECRET (jeśli używamy)
+       - CMA_API_KEY (jeśli używamy)
+       - Pozostałe zmienne ze wzoru .env.example
+
+2. Przygotuj listę punktów firewall do przekazania PNS:
+   [ ] Outbound HTTPS 443 → api.maersk.com
+   [ ] Outbound HTTPS 443 → api.cma-cgm.net
+   [ ] Outbound HTTPS 443 → api.hapag-lloyd.com
+   [ ] Outbound [port 587 lub 25] → SMTP relay (mail)
+   [ ] Inbound port 8787 (backend API, dostęp z reverse proxy)
+
+3. Przygotuj pytania do PNS:
+   - Jaki jest katalog dla .env? (/opt/seatrackv3/.env?)
+   - Gdzie umieścić uploads/ (lokalnie czy na NAS)?
+   - Kto uruchamia npm install? Ty czy IT?
+   - Czy PM2 jest już zainstalowany na serwerze?
+
+PODCZAS SPOTKANIA (koordynacja z PNS):
+
+1. Uzyskaj dostęp do serwera:
+   - SSH connection test
+   - Katalog aplikacji przygotowany
+   - Prawa do mkdir/write
+
+2. Przekazanie kodu:
+   - PNS pull z repozytorium GIT
+   - Lub kopiowanie files
+   - npm install (IT czy my?)
+
+3. Konfiguracja .env:
+   - Umieszczenie w /opt/seatrackv3/.env
+   - Testy zmiennych (echo $TRACKING_SOURCE itp.)
+
+4. Build i start backendu:
+   - npm run build (lub pominąć frontend)
+   - npm run server (test ręczny)
+   - pm2 start (jeśli PM2 dostępny)
+
+5. Test endpoint:
+   - Wewnętrzny test: curl http://localhost:8787/api/health
+   - Jeśli OK → 200 OK + dane o providerze
+
+6. Firewall — tabela ruchu od PNS:
+   - PNS ma tabelę istniejącego ruchu
+   - Ty dodajesz wymagane punkty (patrz lista wyżej)
+   - Weryfikacja polaczenia: curl https://api.maersk.com (test TCP)
+
+PO SPOTKANIU (sprawdzenia i raport):
+
+[ ] Backend uruchomiony i reaguje na /api/health
+[ ] PM2 monitoring pracuje (pm2 status)
+[ ] .env wczytany poprawnie (widać zmienne w procesie)
+[ ] Firewall: potwierdzenie otwarcia portów 443 (HTTPS)
+[ ] Przygotuj raport dla szefa: "Instalacja w toku, czekamy na firewall i backup"
+
+MATERIAŁY DO ZABRANIA NA ROZMOWĘ:
+- Plik .txt odpowiedzi PNS (przygotowaliśmy)
+- Plik .md z dokumentacja SeaTrack (instalacja, endpoints)
+- Lista credentials do API armatorów (jeśli dostępne)
+- Notatnik do zapisów ustaleń
+
+PYTANIA DO MNIE/AI JEŚLI COŚ NIE PÓJDZIE:
+- npm install pada na błędy certyfikatu? → mam obejścia
+- Backend się nie startuje? → debug .env i porty
+- Firewall blokuje? → test curl z serwera, analiza rule

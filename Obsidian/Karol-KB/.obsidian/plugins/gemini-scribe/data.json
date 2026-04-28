@@ -1,0 +1,48 @@
+{
+  "apiKeySecretName": "gemini-api-key",
+  "chatModelName": "gemini-flash-latest",
+  "summaryModelName": "gemini-flash-latest",
+  "completionsModelName": "gemini-flash-lite-latest",
+  "imageModelName": "gemini-3.1-pro-preview",
+  "summaryFrontmatterKey": "summary",
+  "userName": "Karol",
+  "chatHistory": false,
+  "historyFolder": "gemini-scribe",
+  "debugMode": false,
+  "maxRetries": 3,
+  "initialBackoffDelay": 1000,
+  "streamingEnabled": true,
+  "modelDiscovery": {
+    "enabled": true,
+    "autoUpdateInterval": 24,
+    "lastUpdate": 1776146795592,
+    "fallbackToStatic": true
+  },
+  "allowSystemPromptOverride": false,
+  "temperature": 0.7,
+  "topP": 1,
+  "stopOnToolError": true,
+  "loopDetectionEnabled": true,
+  "loopDetectionThreshold": 3,
+  "loopDetectionTimeWindowSeconds": 30,
+  "alwaysAllowReadWrite": false,
+  "toolPolicy": {
+    "activePreset": "cautious",
+    "toolPermissions": {}
+  },
+  "lastSeenVersion": "4.7.0",
+  "ragIndexing": {
+    "enabled": true,
+    "fileSearchStoreName": "fileSearchStores/obsidiankarolkb-vupxhdklz830",
+    "excludeFolders": [],
+    "autoSync": true,
+    "includeAttachments": false
+  },
+  "mcpEnabled": false,
+  "mcpServers": [],
+  "contextCompactionThreshold": 20,
+  "showTokenUsage": false,
+  "alwaysShowDiffView": false,
+  "logToolExecution": true,
+  "hasSeenV4Welcome": true
+}

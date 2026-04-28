@@ -1,0 +1,40 @@
+Temat: SeaTrack v3 - potwierdzenie i kolejne kroki po stronie instalacji
+
+Dzień dobry,
+
+Dziękuję za bardzo konkretne potwierdzenie przygotowania środowiska.
+Potwierdzam, że przyjmuję wskazany układ katalogów:
+- kod aplikacji: /opt/seatrackv3/
+- dane: /var/lib/appdata/seatrackv3/data/
+- logi: /var/lib/appdata/seatrackv3/logs/
+- załączniki: /var/lib/appdata/seatrackv3/uploads/
+
+Potwierdzam też przyjęty model dostępu SSH przez klucz, lokalizację pliku .env oraz SMTP relay (smtpcsi.mumpl.local, porty 25/587).
+Dziękuję również za przygotowanie Node.js LTS + npm i testy warstwy SMTP.
+
+Żeby domknąć wdrożenie asynchronicznie przez mail, proszę o doprecyzowanie kilku punktów operacyjnych:
+
+1) Dostęp SSH
+- Proszę o przesłanie hosta/IP, loginu i klucza prywatnego we wskazanej dedykowanej wiadomości.
+- Proszę o potwierdzenie, czy mam od razu uprawnienia zapisu do wszystkich katalogów seatrackv3 (code/data/logs/uploads).
+
+2) PM2 / uruchomienie procesu
+- Czy PM2 jest już zainstalowany na serwerze?
+- Jeśli nie, proszę o informację, czy mogę zainstalować PM2 globalnie po swojej stronie.
+
+3) Konfiguracja .env
+- Proszę o potwierdzenie, które pola integracyjne w .env są już uzupełnione, a które mam uzupełnić po swojej stronie.
+- W szczególności: parametry armatorów (Maersk/CMA/Hapag) oraz finalny tryb wysyłki maili przez relay.
+
+4) Firewall 443 dla API armatorów
+- Potwierdzam podejście: inicjuję połączenia z aplikacji, a Państwo na tej podstawie domykacie reguły na Palo Alto.
+- Po mojej stronie wykonam testy inicjacji i prześlę od razu listę domen/docelowych kierunków, które pojawią się w logach.
+
+5) Ustalenie kolejności prac
+- Proponuję kolejność: SSH access -> deploy kodu -> uzupełnienie .env -> start procesu -> testy połączeń -> domknięcie FW.
+- Jeśli ta kolejność jest akceptowalna, zaczynam od razu po otrzymaniu dostępu.
+
+Dziękuję i czekam na dane dostępowe.
+
+Pozdrawiam,
+Karol Torebko
