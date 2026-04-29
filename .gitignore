@@ -24,6 +24,8 @@ server/logs/
 server/data/
 uploads/
 graphify-out/
+users_access.xlsx
+M&M air sea cargo S.A - MSC Data Exchange Agreement.docx
 
 # Editor directories and files
 .vscode/*
