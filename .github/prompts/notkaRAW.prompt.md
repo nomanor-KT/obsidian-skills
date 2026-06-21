@@ -14,6 +14,12 @@ Masz wykonać pelny workflow dla notek z katalogu RAW.
 - Usun plik zrodlowy z `RAW` tylko po pelnym, poprawnym zapisie.
 - Na koncu odswiez graph knowledge dla `Obsidian/Karol-KB`.
 
+## Helpery wspierajace workflow
+- `obsidian-raw-classification` - szybka triage: typ, data, temat, routing, tagi.
+- `obsidian-raw-safety` - ostatnia walidacja przed usunieciem zrodla z RAW.
+
+Te helpery sa pomocnicze. Pelny workflow i zasady routingowe zostaja w tym promcie.
+
 ## Kontrakt notatki (obowiazkowy)
 
 ### FRONTMATTER YAML

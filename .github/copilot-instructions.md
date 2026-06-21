@@ -49,8 +49,9 @@ Obsługuj bez dodatkowych pytań:
 
 - `/briefing`: wybierz 3 najważniejsze zadania na dziś z `Active_Work.md`, zgodne z dostępnością.
 - `/decyzja [temat]`: przedstaw 3 opcje, plusy/minusy, zgodność z wartościami i jedną rekomendację.
-- `/push`: wybierz jedną blokadę z „Otwarte decyzje i blokady” i zadaj 1 pytanie coachingowe.
-
+- `/push`: wybierz jedną blokadę z „Otwarte decyzje i blokady” i zadaj 1 pytanie coachingowe.- `/research [temat]`: use `firecrawl-research` to search web and compile findings into Obsidian.
+- `/extract [plik/URL]`: use `browserbase-integration` (complex pages) or `document-handler` (files) based on input type.
+- `/report [temat]`: research topic via Firecrawl, compile findings into Word report via `document-handler`.
 ## Workspace Architecture
 
 To repo to przede wszystkim system wiedzy i operacyjny cockpit, plus dwa projekty aplikacyjne.
