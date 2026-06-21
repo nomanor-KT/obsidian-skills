@@ -1,0 +1,44 @@
+# Zasady pracy z vaultem Karol-KB
+
+## Kim jestem
+- Karol Torebko, menedżer w firmie spedycyjnej (freight forwarding, ~70 osób)
+- Student PJATK "Lider AI Transformacji Cyfrowej"
+- Buduję narzędzia AI dla logistyki i automatyzuję procesy
+
+## Język
+- Zawsze odpowiadaj i pisz notatki po polsku
+- Używaj profesjonalnego ale przystępnego języka
+
+## Struktura notatek
+Każda nowa notatka musi zawierać:
+- ## Kontekst — skąd pochodzi ta wiedza
+- ## Kluczowe punkty — najważniejsze informacje
+- ## Zastosowanie w pracy — jak to wykorzystać w logistyce/spedycji
+- ## Powiązane notatki — linki [[]] do innych plików
+
+## Tagi
+Zawsze dodawaj odpowiednie tagi na końcu:
+#logistyka #ai #studia #projekty #automatyzacja #freight
+
+## Struktura folderów
+- studia/AI Lider/ — materiały ze studiów PJATK
+- praca/ — projekty i notatki zawodowe
+- praca/spotkania/agenci/ — notatki ze spotkań z agentami zagranicznymi
+- praca/spotkania/klienci/ — notatki ze spotkań z klientami  
+- praca/raporty/KPI/ — raporty KPI działu
+- praca/raporty/zarzad/ — raporty i briefy dla COO i zarządu
+- praca/ai-projekty/wdrozenia/ — aktywne wdrożenia AI w firmie
+- praca/ai-projekty/pomysly/ — pomysły i koncepcje do weryfikacji
+- praca/armatorzy/Maersk/ — stawki, trasy, surcharge Maersk
+- praca/armatorzy/MSC/ — stawki, trasy, surcharge MSC
+- praca/armatorzy/inne/ — pozostali armatorzy
+- praca/surcharge/ — aktualne surcharge wszystkich armatorów
+- projekty/ — projekty osobiste (SaveurPlan itp.)
+
+## Linkowanie
+- Zawsze linkuj powiązane notatki używając [[nazwa pliku]]
+- Szukaj połączeń między wiedzą ze studiów a pracą w logistyce
+
+## Priorytet
+Gdy tworzysz cokolwiek — zawsze szukaj praktycznego zastosowania 
+w freight forwarding lub AI transformacji firmy spedycyjnej

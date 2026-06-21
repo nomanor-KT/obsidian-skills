@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies (SeaTrack-v3)
+        run: npm ci --prefix SeaTrack-v3
+
+      - name: Run shipment-rest tests
+        run: |
+          node SeaTrack-v3/scripts/test-shipment-rest.mjs
+          node SeaTrack-v3/scripts/test-shipment-rest-request.mjs

@@ -1,0 +1,135 @@
+﻿---
+typ: projekt
+date: 2026-04-17
+source: RAW
+tags: [typ/projekt, temat/ai, typ/newsletter, temat/thebatch]
+status: aktywny
+---
+
+# The Batch #349 â€” 17 kwietnia 2026
+
+**ĹąrĂłdĹ‚o:** [deeplearning.ai/the-batch/issue-349](https://www.deeplearning.ai/the-batch/issue-349/)
+**Tagi:** #ai #newsletter #thebatch
+
+---
+
+## List Andrew Ng: AI-native zespoĹ‚y inĹĽynierskie
+
+GĹ‚Ăłwna teza: maĹ‚e zespoĹ‚y korzystajÄ…ce z agentĂłw AI dziaĹ‚ajÄ… fundamentalnie inaczej niĹĽ tradycyjne zespoĹ‚y.
+
+**Kluczowe zmiany:**
+- Gdy kodowanie przyspiesza 10-100x, wszystko inne staje siÄ™ wÄ…skim gardĹ‚em â€” PM, design, marketing, legal
+- Proporcja inĹĽynierĂłw do PM spada z 8:1 nawet do 1:1
+- Najszybsze zespoĹ‚y to te, gdzie inĹĽynier rozumie produkt i sam decyduje co budowaÄ‡
+- Generalista wygrywa â€” przy 2-osobowym zespole oboje muszÄ… ogarniaÄ‡ kilka specjalizacji
+- Praca w jednym miejscu (nie remote) = mniej bottleneckĂłw komunikacyjnych
+- Litera skupia siÄ™ na zespoĹ‚ach 2-10 osĂłb; koordynacja wiÄ™kszych â€” temat na przyszĹ‚oĹ›Ä‡
+
+**Rekomendacje Ng:**
+- InĹĽynierowie: uczcie siÄ™ product managementu
+- PM-owie: uczcie siÄ™ budowaÄ‡ produkty
+- ZnajomoĹ›Ä‡ narzÄ™dzi AI pomaga myĹ›leÄ‡ przez pryzmat rĂłĹĽnych rĂłl
+
+---
+
+## Meta Muse Spark â€” koniec open weights
+
+**Co siÄ™ staĹ‚o:** Meta wypuĹ›ciĹ‚a Muse Spark â€” pierwszy model od roku, zamkniÄ™ty (nie open-weights), multimodalny model reasoningowy.
+
+**Specyfikacja:**
+- Input: tekst, obraz, dĹşwiÄ™k (do 262k tokenĂłw); output: tekst
+- 3 tryby reasoning: instant / thinking / contemplating
+- DostÄ™pny przez meta.ai i aplikacjÄ™ Meta AI; API preview dla wybranych partnerĂłw
+- NiedostÄ™pne publicznie: architektura, dane treningowe, liczba parametrĂłw
+
+**Wyniki benchmarkĂłw (Artificial Analysis Intelligence Index):**
+- 4. miejsce ogĂłlnie (52 pkt) za: Claude Opus 4.6 max reasoning (53), Gemini 3.1 Pro + GPT-5.4 (57)
+- Token-efficient: ~59M tokenĂłw vs ~158M dla Claude Opus 4.6
+- Coding Index: 47 â€” sĹ‚abszy od GPT-5.4 (57), Gemini (56), Claude Sonnet 4.6 (51)
+- WyrĂłĹĽnia siÄ™: multimodal (1. miejsce CharXiv Reasoning 86.4%), health (1. HealthBench Hard 42.8%)
+
+**Technicznie:**
+- Contemplating mode = rĂłwnolegle wiele agentĂłw, ktĂłre proponujÄ… rozwiÄ…zania i agregujÄ… wyniki
+- "Thought compression" â€” RL penalizuje za zbÄ™dne tokeny reasoning
+- >1000 lekarzy kuratorowaĹ‚o dane medyczne
+
+**Kontekst:**
+- Meta spÄ™dziĹ‚a $14.3 mld na 49% udziaĹ‚Ăłw w Scale AI (VI 2025), zatrudniĹ‚a Alexandr Wang jako chief AI officer
+- Pivot od open-weights = cios dla developerĂłw budujÄ…cych na Llama
+- Meta celuje w segment biznesowy (OpenAI, Google, Anthropic)
+
+**Trend:** Muse Spark i Kimi K2.5 (Agent Swarm) wskazujÄ… kierunek â€” zamiast trenowaÄ‡ coraz wiÄ™ksze modele, orchestracja wielu agentĂłw w czasie inferencji.
+
+---
+
+## Eli Lilly + Insilico Medicine â€” AI w odkrywaniu lekĂłw
+
+**Deal:** Eli Lilly pĹ‚aci do $2.75 mld firmie Insilico Medicine za prawa do lekĂłw odkrytych przez AI.
+- $115M upfront za prawa ekskluzywne do niesprecyzowanych kandydatĂłw przed testami na ludziach
+- Reszta tied do kamieni milowych R&D, regulacyjnych i komercyjnych
+
+**Insilico Medicine:**
+- ZaĹ‚oĹĽona 2014, Hong Kong
+- 28 kandydatĂłw na leki przez AI, ~poĹ‚owa w badaniach klinicznych
+- Rentosertib (IPF â€” zwĹ‚Ăłknienie pĹ‚uc) â€” pozytywna faza 2a
+- Garutadustat (IBD) â€” faza 2a od I 2026
+
+**Jak dziaĹ‚a pipeline AI:**
+1. **PandaOmics** â€” analiza datasety biologiczne + publikacje + patenty + granty â†’ ranking kandydatĂłw biaĹ‚kowych (target identification)
+2. **Chemistry42** â€” ~30 rĂłwnolegĹ‚ych modeli generatywnych projektuje czÄ…steczki optymalizowane pod: wiÄ…zanie, toksycznoĹ›Ä‡, rozpuszczalnoĹ›Ä‡
+
+**Efekty:**
+- Od identyfikacji targetu do czÄ…steczki gotowej do testĂłw przedklinicznych: **18 miesiÄ™cy** (vs tradycyjne 5-6 lat)
+- Syntetyzowane i testowane: ~60-200 czÄ…steczek na program (vs tradycyjne 200k-1M przesiewanych)
+- Wynik fazy 2a Rentosertib: +98.4 ml FVC u pacjentĂłw (placebo: -20.3 ml)
+
+**WaĹĽne zastrzeĹĽenie:** Ĺ»aden lek odkryty przez AI nie uzyskaĹ‚ jeszcze zatwierdzenia regulacyjnego. 70% kandydatĂłw w fazie 2 odpada.
+
+---
+
+## Regulacje AI w stanach USA â€” mozaika przepisĂłw
+
+**Sytuacja:** >1500 projektĂłw ustaw w stanach, ponad 100 juĹĽ uchwalonych praw w 40 stanach â€” mimo ĹĽe administracja Trumpa naciska na regulacje federalne, nie stanowe.
+
+**Kluczowe stany:**
+
+| Stan | Co uchwalono / planujÄ… |
+|------|------------------------|
+| **Kalifornia** | Niewidoczny watermark na AI output (od VIII 2026); ocena ryzyk katastroficznych przez deweloperĂłw; zakaz chatbotĂłw dyskutujÄ…cych o samookaleczeniu z maĹ‚oletnimi |
+| **Kolorado** | Ochrona przed dyskryminacjÄ… algorytmicznÄ… w high-stakes decisions (edukacja, finanse, zdrowie, mieszkanie) â€” od VII 2026; coroczne audyty |
+| **Minnesota** | Zakaz AI undressing photos; zakaz dynamicznych cen opartych na zachowaniu; ubezpieczenia zdrowotne nie mogÄ… odmawiaÄ‡ opieki bez lekarza (od VIII) |
+| **Nowy Jork** | Od I 2027: firmy >$500M przychodu muszÄ… blokowaÄ‡ generowanie broni bio i narzÄ™dzi hackingowych; roczne audyty |
+| **Ohio** | Zakaz klonowania gĹ‚osu/wizerunku do reklam; AI bez osobowoĹ›ci prawnej (rozwaĹĽane) |
+| **Utah** | Zakaz deepfakes seksualnych; ubezpieczenia nie mogÄ… odmawiaÄ‡ opieki przez AI bez lekarza |
+
+**Federalne vs stanowe:**
+- Trump XII 2025: executive order zniechÄ™cajÄ…cy do regulacji stanowych, grozi wstrzymaniem funduszy federalnych
+- III 2026: federalne wytyczne â€” skupiajÄ… siÄ™ na ochronie dzieci i cenach energii przez centra danych AI
+
+**Dlaczego to waĹĽne:** Jeden model AI moĹĽe jednoczeĹ›nie wymagaÄ‡ audytu bias w Kolorado, watermarku w Kalifornii i raportowania w Nowym Jorku â€” przy federalnych prĂłbach uniewaĹĽnienia tych wymogĂłw. Wzrost kosztĂłw compliance, ryzyko prawne, fragmentacja.
+
+---
+
+## Badanie: Persona Generators (Google)
+
+**Problem:** LLM symulujÄ…c uĹĽytkownikĂłw daje zbyt uĹ›rednione odpowiedzi â€” nie odwzorowuje rozrzutu opinii w realnej populacji.
+
+**RozwiÄ…zanie:** Persona Generators (Paglieri, Cross et al., Google) â€” system generujÄ…cy 25 zrĂłĹĽnicowanych person za pomocÄ… algorytmu ewolucyjnego AlphaEvolve.
+
+**Jak dziaĹ‚a:**
+1. Gemini 2.5 Pro generuje 30 kwestionariuszy (zdrowie, finanse, teorie spiskowe itp.) z "osiami rĂłĹĽnorodnoĹ›ci" (np. tolerancja ryzyka, zaufanie do instytucji)
+2. AlphaEvolve iteracyjnie (500 iteracji, 10 rĂłwnolegĹ‚ych wersji kodu) generuje kod tworzÄ…cy 25 person maksymalizujÄ…cych rĂłĹĽnorodnoĹ›Ä‡ odpowiedzi
+3. KaĹĽda persona odpowiada na kwestionariusz (Gemma 3-27B-IT przez bibliotekÄ™ Concordia); odpowiedzi â†’ wektory
+4. Mierzonych 6 metryk rĂłĹĽnorodnoĹ›ci (m.in. Ĺ›rednia odlegĹ‚oĹ›Ä‡ wektorĂłw)
+
+**Wyniki:**
+- Persona Generators pokrywajÄ… 82% moĹĽliwych odpowiedzi
+- Nemotron Personas: 76%
+- Concordia memory generator: 46%
+
+**Zastosowanie:** Symulacja reakcji uĹĽytkownikĂłw na nowe produkty/funkcje â€” sposĂłb na obejĹ›cie bottlenecku PM bez drogich badaĹ„ z prawdziwymi uĹĽytkownikami.
+
+---
+
+*Notatka wygenerowana na podstawie The Batch #349, Andrew Ng / DeepLearning.AI*
+

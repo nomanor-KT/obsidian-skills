@@ -1,0 +1,8 @@
+# CODEOWNERS - replace placeholders with real GitHub usernames or team names
+# Format: <path> <owner>
+# Example owners are placeholders; please edit to actual GitHub handles/team slugs.
+
+ /SeaTrack-v3/ @nomanor-KT
+ /karcianka/ @nomanor-KT
+ /.github/ @nomanor-KT
+ * @nomanor-KT

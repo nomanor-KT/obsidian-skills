@@ -1,0 +1,3 @@
+[submodule "external/obsidian-skills"]
+	path = external/obsidian-skills
+	url = https://github.com/nomanor-KT/obsidian-skills.git

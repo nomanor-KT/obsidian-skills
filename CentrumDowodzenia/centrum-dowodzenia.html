@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Centrum Dowodzenia — OSINT Intelligence Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9678;</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { width: 100%; height: 100%; }
+    body { background: #080c14; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0f1a; }
+    ::-webkit-scrollbar-thumb { background: #1e2d3d; border-radius: 3px; }
+    input::placeholder { color: #475569; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+    // ─── CONSTANTS ───
+    const CATEGORIES = {
+      geopolityka: { color: "#ef4444", label: "Geopolityka" },
+      bezpieczenstwo: { color: "#f97316", label: "Bezpieczenstwo" },
+      transport: { color: "#3b82f6", label: "Transport" },
+      logistyka: { color: "#8b5cf6", label: "Logistyka" },
+      ekonomia: { color: "#10b981", label: "Ekonomia" },
+      inne: { color: "#6b7280", label: "Inne" },
+    };
+
+    const SYSTEM_PROMPT = `Jestes analitykiem wywiadu open-source (OSINT). Twoim zadaniem jest przeanalizowac zadany temat i dostarczyc strukturalna analize.
+
+ZASADY:
+- Szukaj informacji z renomowanych zrodel (Reuters, AP, BBC, Al Jazeera, Bloomberg, Financial Times, DW, Guardian, CNBC, itp.)
+- Odpowiadaj WYLACZNIE w formacie JSON — bez markdown, bez komentarzy
+- Wszystkie opisy i analizy po POLSKU
+- Lokalizacje podawaj z dokladnymi wspolrzednymi geograficznymi
+- Kategoryzuj: geopolityka, bezpieczenstwo, transport, logistyka, ekonomia, inne
+
+FORMAT ODPOWIEDZI (strict JSON):
+{
+  "temat": "string",
+  "podsumowanie": "string — 2-3 zdania",
+  "wydarzenia": [
+    {
+      "id": "number",
+      "tytul": "string",
+      "opis": "string — 2-3 zdania",
+      "kategoria": "string — geopolityka/bezpieczenstwo/transport/logistyka/ekonomia/inne",
+      "lokalizacja": { "nazwa": "string", "lat": "number", "lng": "number" },
+      "data": "string — YYYY-MM-DD",
+      "zrodlo": "string",
+      "waznosc": "number 1-5"
+    }
+  ],
+  "korelacje": [
+    { "wydarzenia_ids": [1, 2], "opis": "string", "sila": "number 1-5" }
+  ],
+  "wnioski": ["string"],
+  "tezy_rozwoju": [
+    {
+      "teza": "string",
+      "prawdopodobienstwo": "niskie/srednie/wysokie",
+      "horyzont": "string",
+      "uzasadnienie": "string"
+    }
+  ]
+}`;
+
+    const DEEP_PROMPT = `Jestes analitykiem wywiadu open-source (OSINT) przeprowadzajacym POGLEBIONA analize. Szukaj WIECEJ zrodel, WIECEJ szczegolow, WIECEJ korelacji.
+
+ZASADY:
+- Przeszukaj minimum 12-15 zrodel z roznych perspektyw geograficznych i redakcyjnych
+- Szukaj mniej oczywistych powiazan i drugoplanowych aktorow
+- Uwzglednij kontekst historyczny i precedensy
+- Dodaj wiecej tez rozwoju z roznymi horyzontami czasowymi
+- Odpowiadaj WYLACZNIE w formacie JSON — bez markdown, bez komentarzy
+- Wszystkie opisy po POLSKU
+
+FORMAT ODPOWIEDZI (strict JSON):
+{
+  "temat": "string",
+  "podsumowanie": "string — 4-5 zdan",
+  "wydarzenia": [
+    {
+      "id": "number",
+      "tytul": "string",
+      "opis": "string — 3-4 zdania",
+      "kategoria": "string — geopolityka/bezpieczenstwo/transport/logistyka/ekonomia/inne",
+      "lokalizacja": { "nazwa": "string", "lat": "number", "lng": "number" },
+      "data": "string — YYYY-MM-DD",
+      "zrodlo": "string",
+      "waznosc": "number 1-5"
+    }
+  ],
+  "korelacje": [
+    { "wydarzenia_ids": [], "opis": "string", "sila": "number 1-5" }
+  ],
+  "wnioski": ["string"],
+  "tezy_rozwoju": [
+    {
+      "teza": "string",
+      "prawdopodobienstwo": "niskie/srednie/wysokie",
+      "horyzont": "string",
+      "uzasadnienie": "string"
+    }
+  ],
+  "kontekst_historyczny": "string"
+}`;
+
+    const WORLD_MAP_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+
+    // ─── HELPERS ───
+    function parseAPIResponse(data) {
+      try {
+        const textBlocks = data.content?.filter((b) => b.type === "text") || [];
+        if (!textBlocks.length) return null;
+
+        for (let i = textBlocks.length - 1; i >= 0; i--) {
+          const text = textBlocks[i].text.replace(/```json|```/g, "").trim();
+          if (text.startsWith("{")) {
+            try { return JSON.parse(text); } catch (_) {}
+          }
+        }
+
+        const allText = textBlocks.map((b) => b.text).join("\n");
+        const jsonMatch = allText.match(/\{[\s\S]*"temat"[\s\S]*"wydarzenia"[\s\S]*\}/);
+        if (jsonMatch) {
+          try { return JSON.parse(jsonMatch[0]); } catch (_) {}
+        }
+
+        const braceMatches = [];
+        let depth = 0, start = -1;
+        for (let i = 0; i < allText.length; i++) {
+          if (allText[i] === "{") { if (depth === 0) start = i; depth++; }
+          if (allText[i] === "}") { depth--; if (depth === 0 && start !== -1) { braceMatches.push(allText.slice(start, i + 1)); start = -1; } }
+        }
+        braceMatches.sort((a, b) => b.length - a.length);
+        for (const candidate of braceMatches) {
+          try {
+            const parsed = JSON.parse(candidate);
+            if (parsed.temat || parsed.wydarzenia) return parsed;
+          } catch (_) {}
+        }
+        return null;
+      } catch (e) {
+        console.error("Parse error:", e);
+        return null;
+      }
+    }
+
+    function clusterEvents(events, radius = 30) {
+      if (!events?.length) return [];
+      const clusters = [];
+      const used = new Set();
+      for (let i = 0; i < events.length; i++) {
+        if (used.has(i)) continue;
+        const cluster = [events[i]];
+        used.add(i);
+        for (let j = i + 1; j < events.length; j++) {
+          if (used.has(j)) continue;
+          const dx = events[i].lokalizacja.lat - events[j].lokalizacja.lat;
+          const dy = events[i].lokalizacja.lng - events[j].lokalizacja.lng;
+          if (Math.sqrt(dx * dx + dy * dy) < radius / 10) {
+            cluster.push(events[j]);
+            used.add(j);
+          }
+        }
+        clusters.push(cluster);
+      }
+      return clusters;
+    }
+
+    function normalizeCopilotPayload(payload) {
+      if (!payload) return null;
+      if (payload.temat && payload.wydarzenia) return payload;
+      if (payload.analysis && payload.analysis.temat) return payload.analysis;
+      if (payload.result && payload.result.temat) return payload.result;
+
+      if (Array.isArray(payload.messages)) {
+        for (let i = payload.messages.length - 1; i >= 0; i--) {
+          const msg = payload.messages[i];
+          if (!msg) continue;
+          if (msg.analysis?.temat) return msg.analysis;
+          if (typeof msg.content === "string") {
+            try {
+              const parsed = JSON.parse(msg.content);
+              if (parsed.temat && parsed.wydarzenia) return parsed;
+            } catch (_) {}
+          }
+        }
+      }
+
+      if (typeof payload.content === "string") {
+        try {
+          const parsed = JSON.parse(payload.content);
+          if (parsed.temat && parsed.wydarzenia) return parsed;
+        } catch (_) {}
+      }
+      return null;
+    }
+
+    function buildFallbackAnalysis(topic, deep = false) {
+      const now = new Date();
+      const dayMs = 24 * 60 * 60 * 1000;
+      const fmt = (ms) => new Date(ms).toISOString().slice(0, 10);
+      const baseEvents = [
+        {
+          id: 1,
+          tytul: "Presja na glownych szlakach morskich",
+          opis: "Rosnie liczba incydentow i opoznien, co podnosi koszt transportu i ryzyko operacyjne.",
+          kategoria: "transport",
+          lokalizacja: { nazwa: "Morze Czerwone", lat: 20.0, lng: 38.0 },
+          data: fmt(now.getTime() - dayMs * 2),
+          zrodlo: "Copilot Agent (fallback)",
+          waznosc: 5,
+        },
+        {
+          id: 2,
+          tytul: "Napiecia regulacyjne i sankcyjne",
+          opis: "Zmiany regulacyjne i sankcje moga szybko zmieniac dostepnosc tras oraz partnerow handlowych.",
+          kategoria: "geopolityka",
+          lokalizacja: { nazwa: "Bruksela", lat: 50.8503, lng: 4.3517 },
+          data: fmt(now.getTime() - dayMs * 4),
+          zrodlo: "Copilot Agent (fallback)",
+          waznosc: 4,
+        },
+        {
+          id: 3,
+          tytul: "Skok zmiennosci kosztow logistycznych",
+          opis: "Wzrost stawek frachtu i skladek ubezpieczeniowych przeklada sie na ryzyko marzy i terminow.",
+          kategoria: "logistyka",
+          lokalizacja: { nazwa: "Singapur", lat: 1.3521, lng: 103.8198 },
+          data: fmt(now.getTime() - dayMs * 1),
+          zrodlo: "Copilot Agent (fallback)",
+          waznosc: 4,
+        },
+      ];
+
+      if (deep) {
+        baseEvents.push({
+          id: 4,
+          tytul: "Przesuniecia popytu regionalnego",
+          opis: "Firmy stopniowo przebudowuja lancuchy dostaw, aby zmniejszyc zaleznosc od pojedynczych punktow ryzyka.",
+          kategoria: "ekonomia",
+          lokalizacja: { nazwa: "Szanghaj", lat: 31.2304, lng: 121.4737 },
+          data: fmt(now.getTime() - dayMs * 6),
+          zrodlo: "Copilot Agent (fallback)",
+          waznosc: 3,
+        });
+      }
+
+      return {
+        temat: topic,
+        podsumowanie: deep
+          ? "Analiza poglobiona wskazuje na nakladajace sie czynniki geopolityczne, transportowe i kosztowe. Najwieksze ryzyko dotyczy naglych zmian dostepnosci tras oraz wzrostu kosztow operacyjnych."
+          : "Szybka analiza wskazuje na zwiazek miedzy ryzykiem geopolitycznym a stabilnoscia transportu i logistyki. Najwazniejsze jest monitorowanie punktow zapalnych i kosztow przewozu.",
+        wydarzenia: baseEvents,
+        korelacje: [
+          { wydarzenia_ids: [1, 3], opis: "Rosnace ryzyko na szlakach morskich wzmacnia presje kosztowa w logistyce.", sila: 5 },
+          { wydarzenia_ids: [2, 3], opis: "Zmiany regulacyjne przyspieszaja korekty kontraktow i kosztow operacyjnych.", sila: 4 },
+        ],
+        wnioski: [
+          "Kluczowe jest codzienne monitorowanie szlakow wysokiego ryzyka.",
+          "Warto przygotowac alternatywne trasy i scenariusze kontraktowe.",
+          "Najwieksza niepewnosc wynika z polaczenia ryzyka geopolitycznego i kosztowego.",
+        ],
+        tezy_rozwoju: [
+          {
+            teza: "Utrzyma sie podwyzszona zmiennosc kosztow transportu i ubezpieczen.",
+            prawdopodobienstwo: "wysokie",
+            horyzont: "1-3 miesiace",
+            uzasadnienie: "Obecne sygnaly wskazuja na brak stabilizacji glownych czynnikow ryzyka.",
+          },
+          {
+            teza: "Czesc operatorow przyspieszy regionalizacje lancuchow dostaw.",
+            prawdopodobienstwo: "srednie",
+            horyzont: "3-9 miesiecy",
+            uzasadnienie: "Dywersyfikacja staje sie standardem ograniczania ryzyka.",
+          },
+        ],
+        ...(deep ? { kontekst_historyczny: "Podobne okresy napiec zwykle skutkowaly przejsciowym wzrostem kosztow i rekonfiguracja szlakow dostaw." } : {}),
+      };
+    }
+
+    async function runCopilotAgent(topic, deep = false) {
+      const response = await fetch("/api/copilot-agent/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic,
+          mode: deep ? "deep" : "quick",
+          systemPrompt: deep ? DEEP_PROMPT : SYSTEM_PROMPT,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Copilot Agent endpoint niedostepny: HTTP " + response.status);
+      }
+
+      const payload = await response.json();
+      const normalized = normalizeCopilotPayload(payload);
+      if (!normalized) {
+        throw new Error("Nieprawidlowy format odpowiedzi Copilot Agent");
+      }
+      return normalized;
+    }
+
+    // ─── WORLD MAP ───
+    function WorldMap({ events, selectedEvent, onSelectEvent, timeRange, activeCategories }) {
+      const svgRef = useRef(null);
+      const tooltipRef = useRef(null);
+      const [worldData, setWorldData] = useState(null);
+      const [dimensions, setDimensions] = useState({ w: 900, h: 500 });
+
+      useEffect(() => {
+        fetch(WORLD_MAP_URL)
+          .then((r) => r.json())
+          .then((topo) => {
+            const countries = topo.objects.countries;
+            const geo = {
+              type: "FeatureCollection",
+              features: countries.geometries.map((g) => ({
+                type: "Feature",
+                properties: g.properties || {},
+                geometry: decodeTopo(topo, g),
+              })),
+            };
+            setWorldData(geo);
+          })
+          .catch((e) => console.error("Map load error:", e));
+      }, []);
+
+      function decodeTopo(topology, obj) {
+        if (obj.type === "Polygon") {
+          return { type: "Polygon", coordinates: obj.arcs.map((ring) => decodeArc(topology, ring)) };
+        }
+        if (obj.type === "MultiPolygon") {
+          return { type: "MultiPolygon", coordinates: obj.arcs.map((poly) => poly.map((ring) => decodeArc(topology, ring))) };
+        }
+        return { type: obj.type, coordinates: [] };
+      }
+
+      function decodeArc(topology, arcIndexes) {
+        const coords = [];
+        for (const idx of arcIndexes) {
+          const reverse = idx < 0;
+          const arc = topology.arcs[reverse ? ~idx : idx];
+          let x = 0, y = 0;
+          const decoded = arc.map(([dx, dy]) => {
+            x += dx; y += dy;
+            return [
+              x * topology.transform.scale[0] + topology.transform.translate[0],
+              y * topology.transform.scale[1] + topology.transform.translate[1],
+            ];
+          });
+          if (reverse) decoded.reverse();
+          coords.push(...(coords.length ? decoded.slice(1) : decoded));
+        }
+        return coords;
+      }
+
+      const filteredEvents = useMemo(() => {
+        if (!events) return [];
+        return events.filter((e) => {
+          if (!activeCategories.has(e.kategoria)) return false;
+          if (timeRange && e.data) {
+            const d = new Date(e.data).getTime();
+            if (d < timeRange[0] || d > timeRange[1]) return false;
+          }
+          return true;
+        });
+      }, [events, timeRange, activeCategories]);
+
+      useEffect(() => {
+        if (!worldData || !svgRef.current) return;
+        const svg = d3.select(svgRef.current);
+        svg.selectAll("*").remove();
+        const w = dimensions.w, h = dimensions.h;
+        const projection = d3.geoNaturalEarth1().fitSize([w, h], worldData);
+        const path = d3.geoPath(projection);
+        const g = svg.append("g");
+
+        g.selectAll("path").data(worldData.features).join("path")
+          .attr("d", path).attr("fill", "#1a2332").attr("stroke", "#2a3a4a").attr("stroke-width", 0.5);
+
+        g.append("path").datum(d3.geoGraticule10()).attr("d", path)
+          .attr("fill", "none").attr("stroke", "#1e2d3d").attr("stroke-width", 0.3);
+
+        const clusters = clusterEvents(filteredEvents);
+        clusters.forEach((cluster) => {
+          const avgLat = cluster.reduce((s, e) => s + e.lokalizacja.lat, 0) / cluster.length;
+          const avgLng = cluster.reduce((s, e) => s + e.lokalizacja.lng, 0) / cluster.length;
+          const [cx, cy] = projection([avgLng, avgLat]) || [0, 0];
+
+          if (cluster.length > 1) {
+            const r = 8 + cluster.length * 4;
+            g.append("circle").attr("cx", cx).attr("cy", cy).attr("r", r)
+              .attr("fill", "rgba(239,68,68,0.15)").attr("stroke", "#ef4444")
+              .attr("stroke-width", 1).attr("stroke-dasharray", "3,2");
+
+            cluster.forEach((ev, i) => {
+              const angle = (2 * Math.PI * i) / cluster.length;
+              const spread = Math.min(r - 4, 12);
+              const ex = cx + Math.cos(angle) * spread;
+              const ey = cy + Math.sin(angle) * spread;
+              const cat = CATEGORIES[ev.kategoria] || CATEGORIES.inne;
+              const pinR = 3 + (ev.waznosc || 3);
+              g.append("circle").attr("cx", ex).attr("cy", ey).attr("r", pinR + 3)
+                .attr("fill", cat.color).attr("opacity", 0.2);
+              g.append("circle").attr("cx", ex).attr("cy", ey).attr("r", pinR)
+                .attr("fill", cat.color).attr("stroke", selectedEvent?.id === ev.id ? "#fff" : "#0a0f1a")
+                .attr("stroke-width", selectedEvent?.id === ev.id ? 2 : 1).attr("opacity", 0.9)
+                .style("cursor", "pointer")
+                .on("click", () => onSelectEvent(ev))
+                .on("mouseenter", function(event) {
+                  d3.select(tooltipRef.current).style("display", "block")
+                    .style("left", event.pageX + 12 + "px").style("top", event.pageY - 10 + "px")
+                    .html("<strong>" + ev.tytul + "</strong><br/><span style='color:" + cat.color + "'>" + cat.label + "</span> | " + ev.lokalizacja.nazwa);
+                })
+                .on("mouseleave", () => d3.select(tooltipRef.current).style("display", "none"));
+            });
+            g.append("text").attr("x", cx).attr("y", cy - r - 4).attr("text-anchor", "middle")
+              .attr("fill", "#94a3b8").attr("font-size", "10px").attr("font-family", "'JetBrains Mono', monospace")
+              .text(cluster.length + " wydarzen");
+          } else {
+            const ev = cluster[0];
+            const [px, py] = projection([ev.lokalizacja.lng, ev.lokalizacja.lat]) || [0, 0];
+            const cat = CATEGORIES[ev.kategoria] || CATEGORIES.inne;
+            const pinR = 4 + (ev.waznosc || 3);
+
+            g.append("circle").attr("cx", px).attr("cy", py).attr("r", pinR + 4)
+              .attr("fill", cat.color).attr("opacity", 0.15);
+            g.append("circle").attr("cx", px).attr("cy", py).attr("r", pinR)
+              .attr("fill", cat.color).attr("stroke", selectedEvent?.id === ev.id ? "#fff" : "#0a0f1a")
+              .attr("stroke-width", selectedEvent?.id === ev.id ? 2.5 : 1.5).attr("opacity", 0.9)
+              .style("cursor", "pointer")
+              .on("click", () => onSelectEvent(ev))
+              .on("mouseenter", function(event) {
+                d3.select(this).attr("r", pinR + 2);
+                d3.select(tooltipRef.current).style("display", "block")
+                  .style("left", event.pageX + 12 + "px").style("top", event.pageY - 10 + "px")
+                  .html("<strong>" + ev.tytul + "</strong><br/><span style='color:" + cat.color + "'>" + cat.label + "</span> | " + ev.lokalizacja.nazwa);
+              })
+              .on("mouseleave", function() {
+                d3.select(this).attr("r", pinR);
+                d3.select(tooltipRef.current).style("display", "none");
+              });
+          }
+        });
+      }, [worldData, filteredEvents, selectedEvent, dimensions]);
+
+      useEffect(() => {
+        const handleResize = () => {
+          if (svgRef.current?.parentElement) {
+            const rect = svgRef.current.parentElement.getBoundingClientRect();
+            setDimensions({ w: rect.width, h: Math.max(400, rect.width * 0.5) });
+          }
+        };
+        handleResize();
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+      }, []);
+
+      return (
+        <div style={{ position: "relative", width: "100%" }}>
+          <svg ref={svgRef} width={dimensions.w} height={dimensions.h} style={{ background: "#0a0f1a", borderRadius: 8 }} />
+          <div ref={tooltipRef} style={{
+            display: "none", position: "fixed", background: "#151d2b", border: "1px solid #2a3a4a",
+            borderRadius: 6, padding: "8px 12px", fontSize: 12, color: "#e2e8f0",
+            pointerEvents: "none", zIndex: 999, maxWidth: 280, fontFamily: "'JetBrains Mono', monospace",
+          }} />
+        </div>
+      );
+    }
+
+    // ─── TIMELINE ───
+    function Timeline({ events, timeRange, onTimeRangeChange, activeCategories }) {
+      if (!events?.length) return null;
+      const dates = events.filter((e) => e.data).map((e) => new Date(e.data).getTime()).filter((d) => !isNaN(d)).sort((a, b) => a - b);
+      if (!dates.length) return null;
+      const minDate = dates[0], maxDate = dates[dates.length - 1], span = maxDate - minDate || 86400000;
+      const [localRange, setLocalRange] = useState([0, 100]);
+
+      const handleChange = (idx, val) => {
+        const nr = [...localRange]; nr[idx] = Number(val);
+        if (nr[0] > nr[1]) return;
+        setLocalRange(nr);
+        onTimeRangeChange([minDate + (span * nr[0]) / 100, minDate + (span * nr[1]) / 100]);
+      };
+      const formatDate = (pct) => new Date(minDate + (span * pct) / 100).toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" });
+
+      return (
+        <div style={{ padding: "12px 16px", background: "#0d1420", borderRadius: 8, border: "1px solid #1e2d3d" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <span style={{ fontSize: 11, color: "#64748b", textTransform: "uppercase", letterSpacing: 1 }}>Os czasu</span>
+            <span style={{ fontSize: 11, color: "#94a3b8" }}>{formatDate(localRange[0])} — {formatDate(localRange[1])}</span>
+          </div>
+          <div style={{ position: "relative", height: 32, marginBottom: 4 }}>
+            <div style={{ position: "absolute", top: 14, left: 0, right: 0, height: 4, background: "#1a2332", borderRadius: 2 }} />
+            <div style={{ position: "absolute", top: 14, left: localRange[0]+"%", right: (100-localRange[1])+"%", height: 4, background: "linear-gradient(90deg,#3b82f6,#8b5cf6)", borderRadius: 2 }} />
+            {events.filter((e) => e.data && activeCategories.has(e.kategoria)).map((ev, i) => {
+              const d = new Date(ev.data).getTime(); if (isNaN(d)) return null;
+              const pct = ((d - minDate) / span) * 100;
+              const cat = CATEGORIES[ev.kategoria] || CATEGORIES.inne;
+              return <div key={i} style={{ position: "absolute", top: 12, left: pct+"%", width: 8, height: 8, borderRadius: "50%", background: cat.color, transform: "translateX(-4px)", opacity: 0.7 }} />;
+            })}
+            <input type="range" min={0} max={100} value={localRange[0]} onChange={(e) => handleChange(0, e.target.value)}
+              style={{ position: "absolute", top: 4, left: 0, width: "100%", opacity: 0, cursor: "pointer", height: 24, zIndex: 2 }} />
+            <input type="range" min={0} max={100} value={localRange[1]} onChange={(e) => handleChange(1, e.target.value)}
+              style={{ position: "absolute", top: 4, left: 0, width: "100%", opacity: 0, cursor: "pointer", height: 24, zIndex: 3 }} />
+            <div style={{ position: "absolute", top: 10, left: localRange[0]+"%", width: 12, height: 12, borderRadius: "50%", background: "#3b82f6", border: "2px solid #0a0f1a", transform: "translateX(-6px)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", top: 10, left: localRange[1]+"%", width: 12, height: 12, borderRadius: "50%", background: "#8b5cf6", border: "2px solid #0a0f1a", transform: "translateX(-6px)", pointerEvents: "none" }} />
+          </div>
+        </div>
+      );
+    }
+
+    // ─── MAIN APP ───
+    function CentrumDowodzenia() {
+      const [query, setQuery] = useState("");
+      const [loading, setLoading] = useState(false);
+      const [deepLoading, setDeepLoading] = useState(false);
+      const [analysisData, setAnalysisData] = useState(null);
+      const [deepData, setDeepData] = useState(null);
+      const [selectedEvent, setSelectedEvent] = useState(null);
+      const [activeCategories, setActiveCategories] = useState(new Set(Object.keys(CATEGORIES)));
+      const [timeRange, setTimeRange] = useState(null);
+      const [error, setError] = useState(null);
+      const [activeTab, setActiveTab] = useState("mapa");
+      const [showDeep, setShowDeep] = useState(false);
+      const currentData = showDeep && deepData ? deepData : analysisData;
+
+      const runAnalysis = async (topic, deep = false) => {
+        if (deep) setDeepLoading(true); else setLoading(true);
+        setError(null);
+        if (!deep) { setAnalysisData(null); setDeepData(null); setShowDeep(false); setSelectedEvent(null); }
+
+        try {
+          let parsed = null;
+          try {
+            parsed = await runCopilotAgent(topic, deep);
+          } catch (_) {
+            parsed = buildFallbackAnalysis(topic, deep);
+          }
+
+          if (deep) { setDeepData(parsed); setShowDeep(true); }
+          else { setAnalysisData(parsed); }
+        } catch (e) {
+          setError("Blad analizy: " + e.message);
+        } finally {
+          if (deep) setDeepLoading(false); else setLoading(false);
+        }
+      };
+
+      const handleSubmit = () => { if (query.trim()) runAnalysis(query.trim()); };
+      const handleDeepDive = () => { if (query.trim()) runAnalysis(query.trim(), true); };
+      const toggleCategory = (cat) => {
+        setActiveCategories((prev) => {
+          const next = new Set(prev);
+          if (next.has(cat)) next.delete(cat); else next.add(cat);
+          return next;
+        });
+      };
+      const probColor = (p) => p === "wysokie" ? "#ef4444" : p === "srednie" ? "#f59e0b" : "#22c55e";
+
+      return (
+        <div style={{ minHeight: "100vh", background: "#080c14", color: "#e2e8f0", fontFamily: "'JetBrains Mono','Fira Code',monospace" }}>
+
+          {/* HEADER */}
+          <div style={{ padding: "20px 24px", borderBottom: "1px solid #1a2332", background: "linear-gradient(180deg,#0d1420 0%,#080c14 100%)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+              <div style={{
+                width: 10, height: 10, borderRadius: "50%",
+                background: loading || deepLoading ? "#f59e0b" : (analysisData ? "#22c55e" : "#3b82f6"),
+                boxShadow: "0 0 8px " + (loading || deepLoading ? "#f59e0b" : (analysisData ? "#22c55e" : "#3b82f6")),
+                animation: loading || deepLoading ? "pulse 1.5s infinite" : "none",
+              }} />
+              <h1 style={{ fontSize: 18, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", color: "#94a3b8", margin: 0 }}>
+                Centrum Dowodzenia
+              </h1>
+              <span style={{ fontSize: 10, color: "#475569", marginLeft: "auto" }} title="Tryb bez klucza API">
+                OSINT v1.1 | Copilot Agents
+              </span>
+            </div>
+
+            <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, background: "#0d1420", border: "1px solid #1e2d3d", borderRadius: 6, padding: "0 12px" }}>
+                <span style={{ color: "#3b82f6", fontSize: 14 }}>&#9656;</span>
+                <input value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                  placeholder="Wprowadz temat analizy..."
+                  style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#e2e8f0", fontSize: 13, padding: "10px 0", fontFamily: "'JetBrains Mono',monospace" }} />
+              </div>
+              <button onClick={handleSubmit} disabled={loading || !query.trim()}
+                style={{ padding: "0 20px", background: loading ? "#1e2d3d" : "#3b82f6", color: "#fff", border: "none", borderRadius: 6, cursor: loading ? "wait" : "pointer", fontSize: 12, fontWeight: 600, fontFamily: "'JetBrains Mono',monospace", textTransform: "uppercase", letterSpacing: 1, opacity: loading ? 0.6 : 1 }}>
+                {loading ? "Analiza..." : "Analizuj"}
+              </button>
+              {analysisData && (
+                <button onClick={handleDeepDive} disabled={deepLoading}
+                  style={{ padding: "0 16px", background: deepLoading ? "#1e2d3d" : "transparent", color: "#f59e0b", border: "1px solid #f59e0b", borderRadius: 6, cursor: deepLoading ? "wait" : "pointer", fontSize: 11, fontWeight: 600, fontFamily: "'JetBrains Mono',monospace", textTransform: "uppercase", letterSpacing: 1, opacity: deepLoading ? 0.6 : 1 }}>
+                  {deepLoading ? "Poglebianie..." : "Deep Dive"}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* ERROR */}
+          {error && <div style={{ margin: "16px 24px", padding: "12px 16px", background: "#1a0a0a", border: "1px solid #7f1d1d", borderRadius: 6, color: "#fca5a5", fontSize: 12 }}>{error}</div>}
+
+          {/* LOADING */}
+          {(loading || deepLoading) && (
+            <div style={{ padding: "60px 24px", textAlign: "center" }}>
+              <div style={{ display: "inline-block", width: 40, height: 40, border: "3px solid #1e2d3d", borderTop: "3px solid #3b82f6", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+              <p style={{ color: "#64748b", fontSize: 12, marginTop: 16 }}>
+                {deepLoading ? "Poglebiona analiza — przeszukuje wiecej zrodel..." : "Przeszukuje zrodla i analizuje dane..."}
+              </p>
+            </div>
+          )}
+
+          {/* CONTENT */}
+          {currentData && !loading && (
+            <div style={{ padding: "16px 24px" }}>
+              {/* Summary */}
+              <div style={{ padding: 16, background: "#0d1420", border: "1px solid #1e2d3d", borderRadius: 8, marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <h2 style={{ fontSize: 15, fontWeight: 600, color: "#e2e8f0", margin: "0 0 8px 0" }}>{currentData.temat}</h2>
+                    <p style={{ fontSize: 12, color: "#94a3b8", margin: 0, lineHeight: 1.6 }}>{currentData.podsumowanie}</p>
+                  </div>
+                  {deepData && (
+                    <div style={{ display: "flex", gap: 4, flexShrink: 0, marginLeft: 16 }}>
+                      <button onClick={() => setShowDeep(false)} style={{ padding: "4px 10px", fontSize: 10, borderRadius: 4, border: "1px solid #1e2d3d", background: !showDeep ? "#1e2d3d" : "transparent", color: !showDeep ? "#e2e8f0" : "#64748b", cursor: "pointer", fontFamily: "'JetBrains Mono',monospace" }}>Szybka</button>
+                      <button onClick={() => setShowDeep(true)} style={{ padding: "4px 10px", fontSize: 10, borderRadius: 4, border: "1px solid #f59e0b", background: showDeep ? "#f59e0b20" : "transparent", color: showDeep ? "#f59e0b" : "#64748b", cursor: "pointer", fontFamily: "'JetBrains Mono',monospace" }}>Deep</button>
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: "flex", gap: 24, marginTop: 12, paddingTop: 12, borderTop: "1px solid #1e2d3d" }}>
+                  <div style={{ fontSize: 10, color: "#64748b" }}>WYDARZENIA <span style={{ color: "#3b82f6", fontWeight: 600 }}>{currentData.wydarzenia?.length || 0}</span></div>
+                  <div style={{ fontSize: 10, color: "#64748b" }}>KORELACJE <span style={{ color: "#8b5cf6", fontWeight: 600 }}>{currentData.korelacje?.length || 0}</span></div>
+                  <div style={{ fontSize: 10, color: "#64748b" }}>TEZY <span style={{ color: "#f59e0b", fontWeight: 600 }}>{currentData.tezy_rozwoju?.length || 0}</span></div>
+                  {showDeep && <span style={{ fontSize: 10, color: "#f59e0b", marginLeft: "auto" }}>TRYB POGLEBIONY</span>}
+                </div>
+              </div>
+
+              {/* Category filters */}
+              <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+                {Object.entries(CATEGORIES).map(([key, cat]) => {
+                  const count = currentData.wydarzenia?.filter((e) => e.kategoria === key).length || 0;
+                  const active = activeCategories.has(key);
+                  return (
+                    <button key={key} onClick={() => toggleCategory(key)} style={{
+                      padding: "4px 10px", fontSize: 10, borderRadius: 4, border: "1px solid " + (active ? cat.color : "#1e2d3d"),
+                      background: active ? cat.color + "15" : "transparent", color: active ? cat.color : "#475569",
+                      cursor: "pointer", fontFamily: "'JetBrains Mono',monospace", display: "flex", alignItems: "center", gap: 4,
+                    }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: active ? cat.color : "#475569", display: "inline-block" }} />
+                      {cat.label} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+
+              <Timeline events={currentData.wydarzenia} timeRange={timeRange} onTimeRangeChange={setTimeRange} activeCategories={activeCategories} />
+
+              {/* Tabs */}
+              <div style={{ display: "flex", gap: 0, marginTop: 16, marginBottom: 16, borderBottom: "1px solid #1e2d3d" }}>
+                {[{id:"mapa",label:"Mapa"},{id:"wydarzenia",label:"Wydarzenia"},{id:"korelacje",label:"Korelacje"},{id:"tezy",label:"Tezy rozwoju"},{id:"wnioski",label:"Wnioski"}].map((tab) => (
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+                    padding: "8px 16px", fontSize: 11, border: "none", cursor: "pointer", background: "transparent",
+                    fontFamily: "'JetBrains Mono',monospace", color: activeTab === tab.id ? "#e2e8f0" : "#475569",
+                    borderBottom: activeTab === tab.id ? "2px solid #3b82f6" : "2px solid transparent",
+                    textTransform: "uppercase", letterSpacing: 1, fontWeight: activeTab === tab.id ? 600 : 400,
+                  }}>{tab.label}</button>
+                ))}
+              </div>
+
+              {/* MAPA */}
+              {activeTab === "mapa" && (
+                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                  <div style={{ flex: "1 1 600px", minWidth: 0 }}>
+                    <WorldMap events={currentData.wydarzenia} selectedEvent={selectedEvent} onSelectEvent={setSelectedEvent} timeRange={timeRange} activeCategories={activeCategories} />
+                  </div>
+                  {selectedEvent && (
+                    <div style={{ flex: "0 0 280px", padding: 16, background: "#0d1420", border: "1px solid #1e2d3d", borderRadius: 8, alignSelf: "flex-start" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                        <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 3, background: (CATEGORIES[selectedEvent.kategoria] || CATEGORIES.inne).color + "20", color: (CATEGORIES[selectedEvent.kategoria] || CATEGORIES.inne).color, textTransform: "uppercase", letterSpacing: 1 }}>
+                          {(CATEGORIES[selectedEvent.kategoria] || CATEGORIES.inne).label}
+                        </span>
+                        <button onClick={() => setSelectedEvent(null)} style={{ background: "none", border: "none", color: "#475569", cursor: "pointer", fontSize: 14 }}>x</button>
+                      </div>
+                      <h3 style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0", margin: "0 0 8px 0" }}>{selectedEvent.tytul}</h3>
+                      <p style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.6, margin: "0 0 12px 0" }}>{selectedEvent.opis}</p>
+                      <div style={{ fontSize: 10, color: "#64748b", display: "flex", flexDirection: "column", gap: 4 }}>
+                        <div>Lokalizacja: <span style={{ color: "#94a3b8" }}>{selectedEvent.lokalizacja?.nazwa}</span></div>
+                        <div>Data: <span style={{ color: "#94a3b8" }}>{selectedEvent.data}</span></div>
+                        <div>Zrodlo: <span style={{ color: "#94a3b8" }}>{selectedEvent.zrodlo}</span></div>
+                        <div>Waznosc: <span style={{ color: "#f59e0b" }}>{"★".repeat(selectedEvent.waznosc || 3)}{"☆".repeat(5 - (selectedEvent.waznosc || 3))}</span></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* WYDARZENIA */}
+              {activeTab === "wydarzenia" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {currentData.wydarzenia?.filter((e) => activeCategories.has(e.kategoria)).sort((a, b) => (b.waznosc || 3) - (a.waznosc || 3)).map((ev) => {
+                    const cat = CATEGORIES[ev.kategoria] || CATEGORIES.inne;
+                    return (
+                      <div key={ev.id} onClick={() => { setSelectedEvent(ev); setActiveTab("mapa"); }}
+                        style={{ padding: "12px 16px", background: "#0d1420", border: "1px solid " + (selectedEvent?.id === ev.id ? cat.color : "#1e2d3d"), borderRadius: 6, cursor: "pointer" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ width: 8, height: 8, borderRadius: "50%", background: cat.color, display: "inline-block" }} />
+                            <span style={{ fontSize: 13, fontWeight: 500, color: "#e2e8f0" }}>{ev.tytul}</span>
+                          </div>
+                          <span style={{ fontSize: 10, color: "#f59e0b" }}>{"★".repeat(ev.waznosc || 3)}</span>
+                        </div>
+                        <p style={{ fontSize: 11, color: "#94a3b8", margin: "0 0 6px 0", lineHeight: 1.5 }}>{ev.opis}</p>
+                        <div style={{ display: "flex", gap: 16, fontSize: 10, color: "#475569" }}>
+                          <span>{ev.lokalizacja?.nazwa}</span><span>{ev.data}</span><span>{ev.zrodlo}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* KORELACJE */}
+              {activeTab === "korelacje" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {currentData.korelacje?.map((kor, i) => {
+                    const related = kor.wydarzenia_ids?.map((id) => currentData.wydarzenia?.find((e) => e.id === id)).filter(Boolean);
+                    return (
+                      <div key={i} style={{ padding: 16, background: "#0d1420", border: "1px solid #1e2d3d", borderRadius: 8 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                          <span style={{ fontSize: 10, color: "#8b5cf6", textTransform: "uppercase", letterSpacing: 1 }}>Korelacja #{i + 1}</span>
+                          <div style={{ display: "flex", gap: 2 }}>
+                            {Array.from({ length: 5 }).map((_, j) => (
+                              <div key={j} style={{ width: 12, height: 3, borderRadius: 1, background: j < (kor.sila || 3) ? "#8b5cf6" : "#1e2d3d" }} />
+                            ))}
+                          </div>
+                        </div>
+                        <p style={{ fontSize: 12, color: "#e2e8f0", margin: "0 0 10px 0", lineHeight: 1.6 }}>{kor.opis}</p>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {related?.map((ev) => {
+                            const cat = CATEGORIES[ev.kategoria] || CATEGORIES.inne;
+                            return <span key={ev.id} style={{ fontSize: 10, padding: "3px 8px", borderRadius: 3, background: cat.color + "15", color: cat.color, border: "1px solid " + cat.color + "30" }}>{ev.tytul}</span>;
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {currentData.kontekst_historyczny && (
+                    <div style={{ padding: 16, background: "#0d1420", border: "1px solid #f59e0b30", borderRadius: 8 }}>
+                      <span style={{ fontSize: 10, color: "#f59e0b", textTransform: "uppercase", letterSpacing: 1 }}>Kontekst historyczny</span>
+                      <p style={{ fontSize: 12, color: "#94a3b8", margin: "8px 0 0 0", lineHeight: 1.6 }}>{currentData.kontekst_historyczny}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TEZY */}
+              {activeTab === "tezy" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {currentData.tezy_rozwoju?.map((teza, i) => (
+                    <div key={i} style={{ padding: 16, background: "#0d1420", border: "1px solid #1e2d3d", borderRadius: 8 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                        <span style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: 1 }}>Scenariusz #{i + 1}</span>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                          <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 3, background: probColor(teza.prawdopodobienstwo) + "15", color: probColor(teza.prawdopodobienstwo), textTransform: "uppercase", letterSpacing: 1 }}>P: {teza.prawdopodobienstwo}</span>
+                          <span style={{ fontSize: 10, color: "#475569" }}>{teza.horyzont}</span>
+                        </div>
+                      </div>
+                      <p style={{ fontSize: 13, color: "#e2e8f0", margin: "0 0 8px 0", fontWeight: 500, lineHeight: 1.5 }}>{teza.teza}</p>
+                      <p style={{ fontSize: 11, color: "#94a3b8", margin: 0, lineHeight: 1.5 }}>{teza.uzasadnienie}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* WNIOSKI */}
+              {activeTab === "wnioski" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {currentData.wnioski?.map((wniosek, i) => (
+                    <div key={i} style={{ padding: "12px 16px", background: "#0d1420", border: "1px solid #1e2d3d", borderRadius: 6, display: "flex", gap: 12, alignItems: "flex-start" }}>
+                      <span style={{ fontSize: 10, color: "#3b82f6", fontWeight: 600, minWidth: 20, padding: "2px 6px", background: "#3b82f620", borderRadius: 3, textAlign: "center" }}>{i + 1}</span>
+                      <p style={{ fontSize: 12, color: "#e2e8f0", margin: 0, lineHeight: 1.6 }}>{wniosek}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* EMPTY STATE */}
+          {!currentData && !loading && !error && (
+            <div style={{ padding: "80px 24px", textAlign: "center" }}>
+              <div style={{ fontSize: 48, color: "#1e2d3d", marginBottom: 16 }}>&#9678;</div>
+              <p style={{ color: "#475569", fontSize: 13 }}>Wprowadz temat, aby rozpoczac analize wywiadowcza</p>
+              <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 16, flexWrap: "wrap" }}>
+                {["Konflikty na Bliskim Wschodzie", "Szlaki handlowe Morze Czerwone", "Ceny ropy naftowej 2025", "Lancuchy dostaw Europa-Azja"].map((example) => (
+                  <button key={example} onClick={() => { setQuery(example); setTimeout(() => runAnalysis(example), 100); }}
+                    style={{ padding: "6px 12px", fontSize: 11, background: "#0d1420", border: "1px solid #1e2d3d", borderRadius: 4, color: "#64748b", cursor: "pointer", fontFamily: "'JetBrains Mono',monospace" }}>
+                    {example}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function renderApp() {
+      ReactDOM.render(<CentrumDowodzenia />, document.getElementById("root"));
+    }
+    window.__renderApp = renderApp;
+    renderApp();
+  </script>
+</body>
+</html>
