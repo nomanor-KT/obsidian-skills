@@ -5,6 +5,7 @@
 - Fill all API keys and secrets locally on server only.
 - Never commit .env files.
 - Rotate MAERSK and CMA keys after any suspected exposure.
+- Confirm AUTH_REQUIRED=true, AUTH_JWT_SECRET, and AUTH_TEMP_PASSWORD are set to non-default values in the server environment. Check the startup log: no `[mail-api] SECURITY WARNING` line should appear.
 
 ## 2. Endpoint validation
 - Confirm MAERSK_OAUTH_TOKEN_URL and MAERSK_TRACKING_BASE_URL point to production.

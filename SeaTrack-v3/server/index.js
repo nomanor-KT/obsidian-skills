@@ -103,6 +103,20 @@ const AUTH_REQUIRED = String(process.env.AUTH_REQUIRED || "false").toLowerCase()
 const AUTH_JWT_SECRET = process.env.AUTH_JWT_SECRET || "seatrack-dev-insecure-secret";
 const AUTH_TOKEN_TTL_HOURS = Number(process.env.AUTH_TOKEN_TTL_HOURS || 12);
 const AUTH_TEMP_PASSWORD = process.env.AUTH_TEMP_PASSWORD || "SeaTrack1!";
+
+const AUTH_DEFAULT_JWT_SECRET = "seatrack-dev-insecure-secret";
+const AUTH_DEFAULT_TEMP_PASSWORD = "SeaTrack1!";
+const authSecurityWarnings = [];
+if (!AUTH_REQUIRED) {
+  authSecurityWarnings.push("AUTH_REQUIRED is false: document, tracking-sync, and email endpoints are reachable without a token.");
+}
+if (AUTH_JWT_SECRET === AUTH_DEFAULT_JWT_SECRET) {
+  authSecurityWarnings.push("AUTH_JWT_SECRET is not set; using the built-in insecure fallback value.");
+}
+if (AUTH_TEMP_PASSWORD === AUTH_DEFAULT_TEMP_PASSWORD) {
+  authSecurityWarnings.push("AUTH_TEMP_PASSWORD is not set; using the published default value.");
+}
+
 const MAX_FILE_SIZE_BYTES = Number(process.env.MAX_FILE_SIZE_MB || 25) * 1024 * 1024;
 const MAX_FILES_PER_SHIPMENT = Number(process.env.MAX_FILES_PER_SHIPMENT || 20);
 const ALLOWED_MIME_TYPES = new Set([
@@ -2201,6 +2215,11 @@ const server = createServer(async (req, res) => {
   res.writeHead(404, { "Content-Type": "application/json" });
   res.end(JSON.stringify({ error: "Not found" }));
 });
+
+if (authSecurityWarnings.length > 0) {
+  console.warn("[mail-api] SECURITY WARNING: running with relaxed auth defaults:");
+  for (const msg of authSecurityWarnings) console.warn(`[mail-api]   - ${msg}`);
+}
 
 server.listen(PORT, () => {
   console.log(`[mail-api] listening on http://localhost:${PORT}`);
